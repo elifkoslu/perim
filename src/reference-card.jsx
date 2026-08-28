@@ -74,7 +74,7 @@ function MiniCurve({ series, day, length, color, band, olculen }) {
 
 /* Bu kart "bugün normalde şu seviyelerde olurdun" diyor — döngü günü
    bilinmiyorken söyleyecek bir şeyi yok, o yüzden hiç çizilmiyor. */
-function ReferenceCard({ lunara, cycleDay, altBolum }) {
+function ReferenceCard({ lunara, cycleDay, altBolum, katlanir }) {
   // useLang bir hook; erken çıkış ondan sonra olmalı, yoksa koşullu hook
   // çağrısı olur ve React ağacı bozulur.
   useLang();
@@ -83,6 +83,10 @@ function ReferenceCard({ lunara, cycleDay, altBolum }) {
   const day = Math.max(1, Math.min(L, cycleDay || 1));
   const ref = referenceFor(day, L);
   const fazAdi = uygulamaFazAdi(uygulamaFazi(day, L)).toLocaleLowerCase(I18N.lang === 'tr' ? 'tr' : 'en');
+  /* Katlanır mod: eğriler iki büyük grafik ve altındaki dozları 500 px
+     aşağı itiyordu. Kullanıcı bu ekrana doz işaretlemeye geliyor; eğri
+     bağlam, eylem değil. Kapalıyken tek satırlık özet duruyor. */
+  const [acik, setAcik] = React.useState(!katlanir);
   // Yalnızca iki ana hormon eğri olarak; LH ve testosteron sayı olarak yeter.
   const curves = { e2: curveFor('e2', L), p4: curveFor('p4', L) };
   const COLORS = { e2: '#2a78d6', p4: '#eb6834' };
@@ -126,11 +130,39 @@ function ReferenceCard({ lunara, cycleDay, altBolum }) {
           (folliküler/ovülatuar/luteal) ve sınırları farklıdır — onu buraya
           yazınca hemen üstteki "DÖNGÜ GÜNÜ 13 · OVULASYON" ile çelişiyordu.
           Bantlar aşağıda kendi adlarıyla duruyor, orada doğru karşılık o. */}
+      {(!katlanir || acik) && (
       <p style={{ fontSize: 12.5, color: 'var(--muted)', lineHeight: 1.55, margin: '6px 0 16px' }}>
         {t(`On day ${day} of an ovulatory cycle — ${fazAdi} phase — these are the levels a cycling ovary typically produces.`,
            `Ovülatuar bir döngünün ${day}. gününde — ${fazAdi} fazı — çalışan bir yumurtalığın tipik olarak ürettiği düzeyler.`)}
       </p>
+      )}
 
+      {katlanir && !acik && (
+        <button onClick={() => setAcik(true)} style={{
+          width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          gap: 12, padding: '12px 14px', borderRadius: 'var(--r-md)', cursor: 'pointer',
+          background: 'var(--bone)', border: 'none', textAlign: 'left', marginBottom: 4,
+        }}>
+          <span style={{ display: 'flex', gap: 14, flexWrap: 'wrap' }}>
+            {ref.values.filter(v => curves[v.key]).map(v => (
+              <span key={v.key} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12.5, color: 'var(--ink-2)' }}>
+                <span style={{ width: 8, height: 8, borderRadius: 3, background: COLORS[v.key], flexShrink: 0 }}/>
+                <span style={{ color: 'var(--muted)' }}>{v.key === 'e2' ? 'E2' : 'P4'}</span>
+                {v.value} <span style={{ fontSize: 10.5, color: 'var(--muted)' }}>{v.unit}</span>
+                {olculenler[v.key] && (
+                  <span style={{ fontSize: 11, color: 'var(--muted)' }}>· {t('yours', 'seninki')} {olculenler[v.key].value}</span>
+                )}
+              </span>
+            ))}
+          </span>
+          <span style={{ fontSize: 11.5, color: 'var(--accent)', fontWeight: 600, whiteSpace: 'nowrap' }}>
+            {t('Chart', 'Grafik')} +
+          </span>
+        </button>
+      )}
+
+      {(!katlanir || acik) && (
+      <>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
         {ref.values.filter(v => curves[v.key]).map(v => (
           <div key={v.key}>
@@ -178,6 +210,15 @@ function ReferenceCard({ lunara, cycleDay, altBolum }) {
         ))}
       </div>
 
+      {katlanir && (
+        <button onClick={() => setAcik(false)} style={{
+          marginTop: 12, padding: 0, background: 'transparent', border: 'none', cursor: 'pointer',
+          fontSize: 11.5, color: 'var(--muted)', fontFamily: 'var(--sans)',
+        }}>{t('Hide chart', 'Grafiği gizle')} −</button>
+      )}
+      </>
+      )}
+
       {/* Dozlar bu kartın içine giriyor: "normalde şu seviye · sende şu ölçüldü
           · bugün şu dozu aldın" üçlüsü tek bakışta okunsun diye. Alttaki not
           üçünü birden kapsıyor — eğri hedef değil, doz kararı hekimin. */}
@@ -187,12 +228,22 @@ function ReferenceCard({ lunara, cycleDay, altBolum }) {
         </div>
       )}
 
-      <p style={{ fontSize: 11.5, color: 'var(--muted-2)', lineHeight: 1.55, margin: '16px 0 0' }}>
-        {periVar
-          ? t('The solid line is an ovulatory cycle; the shaded band is the range seen in perimenopause. Notice the asymmetry: estradiol often runs higher than in a young cycle and swings unpredictably, while progesterone collapses because many cycles do not ovulate. That is why a single blood test neither confirms nor rules out perimenopause — context, not a target. Dose decisions belong with your clinician.',
-              'Düz çizgi ovülatuar bir döngü; gölgeli bant perimenopozda görülen aralık. Asimetriye dikkat et: estradiol genç bir döngüdekinden sık sık daha yüksek seyreder ve öngörülemez biçimde dalgalanır, progesteron ise çoğu döngüde ovülasyon olmadığı için çöker. Tek bir kan tahlilinin perimenopozu ne teyit ne de dışlamasının sebebi bu — hedef değil, bağlam. Doz kararı hekiminle birlikte verilir.')
-          : t('Reference values from ovulatory cycles in healthy women — context, not a target. Hormone therapy does not aim to reproduce this curve. Dose decisions belong with your clinician.',
-              'Sağlıklı kadınların ovülatuar döngülerinden alınan referans değerler — hedef değil, bağlam. Hormon tedavisi bu eğriyi yeniden üretmeyi amaçlamaz. Doz kararı hekiminle birlikte verilir.')}
+      {/* Uzun açıklama grafiği anlatıyor — grafik kapalıyken yetim kalıyordu,
+          onunla birlikte katlanıyor. Doz kararının hekime ait olduğu uyarısı
+          ise dozları da kapsıyor, o yüzden her zaman görünür. */}
+      {(!katlanir || acik) && (
+        <p style={{ fontSize: 11.5, color: 'var(--muted-2)', lineHeight: 1.55, margin: '16px 0 0' }}>
+          {periVar
+            ? t('The solid line is an ovulatory cycle; the shaded band is the range seen in perimenopause. Notice the asymmetry: estradiol often runs higher than in a young cycle and swings unpredictably, while progesterone collapses because many cycles do not ovulate. That is why a single blood test neither confirms nor rules out perimenopause.',
+                'Düz çizgi ovülatuar bir döngü; gölgeli bant perimenopozda görülen aralık. Asimetriye dikkat et: estradiol genç bir döngüdekinden sık sık daha yüksek seyreder ve öngörülemez biçimde dalgalanır, progesteron ise çoğu döngüde ovülasyon olmadığı için çöker. Tek bir kan tahlilinin perimenopozu ne teyit ne de dışlamasının sebebi bu.')
+            : t('Reference values from ovulatory cycles in healthy women. Hormone therapy does not aim to reproduce this curve.',
+                'Sağlıklı kadınların ovülatuar döngülerinden alınan referans değerler. Hormon tedavisi bu eğriyi yeniden üretmeyi amaçlamaz.')}
+        </p>
+      )}
+
+      <p style={{ fontSize: 11.5, color: 'var(--muted-2)', lineHeight: 1.55, margin: '14px 0 0' }}>
+        {t('Context, not a target — dose decisions belong with your clinician.',
+           'Hedef değil, bağlam — doz kararı hekiminle birlikte verilir.')}
       </p>
     </Card>
   );

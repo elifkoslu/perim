@@ -44,8 +44,12 @@ function PerimMeds({ lunara, api, logDate, setLogDate }) {
 
   return (
     <div style={wrap}>
-      <ScreenHead eyebrow={t('WHAT YOU TAKE', 'ALDIKLARIN')} title={t('Medications', 'İlaçlar')}
-        right={<DateNav date={dk} onChange={setLogDate}/>}/>
+      {/* Takvim ekranındaki ile aynı sıkıştırma: "ALDIKLARIN / İlaçlar"
+          başlığı ~180 px yiyordu ve alt bar zaten hangi bölümde olduğunu
+          söylüyor. Tarih gezinmesi bölüm seçicinin yanına indi. */}
+      <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 10 }}>
+        <DateNav date={dk} onChange={setLogDate}/>
+      </div>
 
       {/* Bölüm seçici */}
       <div style={{ display: 'flex', gap: 8, marginBottom: 18, flexWrap: 'wrap' }}>
@@ -54,12 +58,12 @@ function PerimMeds({ lunara, api, logDate, setLogDate }) {
           return (
             <button key={b.k} onClick={() => setBolum(b.k)} aria-pressed={on}
               style={{
-                flex: '1 1 130px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-                padding: '12px 14px', borderRadius: 12, cursor: 'pointer', border: 'none',
+                flex: '1 1 0', minWidth: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+                padding: '12px 8px', borderRadius: 12, cursor: 'pointer', border: 'none',
                 background: on ? 'var(--card)' : 'var(--bone)',
                 boxShadow: on ? 'var(--shadow-soft)' : 'none',
                 borderTop: `3px solid ${on ? 'var(--accent)' : 'transparent'}`,
-                fontSize: 13.5, fontWeight: on ? 700 : 500,
+                fontSize: 13, fontWeight: on ? 700 : 500, whiteSpace: 'nowrap',
                 color: on ? 'var(--ink)' : 'var(--ink-2)', fontFamily: 'var(--sans)',
                 transition: 'all 160ms ease',
               }}>
@@ -72,7 +76,7 @@ function PerimMeds({ lunara, api, logDate, setLogDate }) {
       {bolum === 'bhrt' && (
         <>
           {/* Hormon tablosu + bugünün dozları */}
-          <ReferenceCard lunara={lunara} cycleDay={gun} altBolum={
+          <ReferenceCard lunara={lunara} cycleDay={gun} katlanir altBolum={
             <>
               <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 10, marginBottom: 10 }}>
                 <div className="eyebrow">{t("Today's doses", 'Bugünün dozları')}</div>
