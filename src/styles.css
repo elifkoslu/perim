@@ -1,0 +1,258 @@
+/* Self-host edilmiş fontlar: Google CDN'e istek gitmez (bkz. public/fonts). */
+@import './fonts.css';
+
+/* ───────────────────────────────────────────────
+   AURA — BHRT app design tokens
+   Three premium-medical aesthetics:
+     [data-theme="editorial"]  cream paper + ink purple, magazine
+     [data-theme="clinical"]   porcelain + slate, lab-report
+     [data-theme="apothecary"] sage + terracotta, botanical
+   ─────────────────────────────────────────────── */
+
+:root {
+  /* Spacing / radii (shared) */
+  --r-sm: 8px;
+  --r-md: 14px;
+  --r-lg: 22px;
+  --r-xl: 32px;
+
+  /* Default = editorial. Palet markadan türetilir: çizimdeki mürekkep
+     #3A294E (oklch 0.319 0.067 304) ve kâğıt #F2ECE0. */
+  --bg-frame: #1E1826;
+  --bone: #EDE7DA;
+  --ivory: #F5F0E6;
+  --card: #FCFAF4;
+  --line: #E0D8C8;
+  --line-soft: #E9E2D4;
+
+  --ink: #2A2233;
+  --ink-2: #473C55;
+  --muted: #7C6F89;
+  --muted-2: #A297AC;
+
+  --accent: oklch(0.319 0.067 304);
+  --accent-soft: oklch(0.82 0.045 304);
+  --signal-good: oklch(0.55 0.08 145);
+  --signal-warn: oklch(0.62 0.10 50);
+  --signal-low:  oklch(0.55 0.07 25);
+
+  --serif: 'Spectral', 'Cormorant Garamond', Georgia, serif;
+  --sans:  'Manrope', system-ui, -apple-system, sans-serif;
+  --mono:  'JetBrains Mono', ui-monospace, monospace;
+  --serif-weight: 400;
+  --display-italic: italic;
+
+  --shadow-card: 0 1px 0 rgba(42,34,51,0.04), 0 12px 30px -16px rgba(42,34,51,0.18);
+  --shadow-soft: 0 2px 0 rgba(42,34,51,0.03), 0 6px 18px -10px rgba(42,34,51,0.14);
+}
+
+/* CLINICAL — porcelain + slate, lab-report, dense */
+:root[data-theme="clinical"] {
+  --bg-frame: #0E141B;
+  --bone: #F1F0EC;
+  --ivory: #FAFAF7;
+  --card: #FFFFFF;
+  --line: #E1E0DA;
+  --line-soft: #ECEBE5;
+
+  --ink: #131A24;
+  --ink-2: #2B3543;
+  --muted: #6B7480;
+  --muted-2: #99A1AC;
+
+  --accent: oklch(0.55 0.10 220);          /* clinical teal-blue */
+  --accent-soft: oklch(0.85 0.05 220);
+  --signal-good: oklch(0.62 0.10 165);
+  --signal-warn: oklch(0.70 0.13 60);
+  --signal-low:  oklch(0.60 0.14 25);
+
+  --serif: 'Instrument Serif', 'Spectral', Georgia, serif;
+  --sans:  'Manrope', system-ui, sans-serif;
+  --mono:  'JetBrains Mono', ui-monospace, monospace;
+  --display-italic: normal;
+
+  --shadow-card: 0 1px 0 rgba(19,26,36,0.03), 0 8px 24px -16px rgba(19,26,36,0.18);
+}
+
+/* APOTHECARY — sage + cream + terracotta, botanical */
+:root[data-theme="apothecary"] {
+  --bg-frame: #1c241d;
+  --bone: #E7E3D2;
+  --ivory: #F2EEDE;
+  --card: #FAF6E7;
+  --line: #D7D2BD;
+  --line-soft: #E2DDCB;
+
+  --ink: #1F2A20;
+  --ink-2: #354238;
+  --muted: #6E7866;
+  --muted-2: #969E8B;
+
+  --accent: oklch(0.50 0.08 50);          /* terracotta */
+  --accent-soft: oklch(0.78 0.06 60);
+  --signal-good: oklch(0.55 0.07 145);
+  --signal-warn: oklch(0.68 0.10 55);
+  --signal-low:  oklch(0.55 0.08 30);
+
+  --serif: 'EB Garamond', 'Cormorant Garamond', Georgia, serif;
+  --sans:  'DM Sans', system-ui, sans-serif;
+  --mono:  'JetBrains Mono', ui-monospace, monospace;
+  --display-italic: italic;
+
+  --shadow-card: 0 1px 0 rgba(31,42,32,0.03), 0 10px 26px -14px rgba(31,42,32,0.18);
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  font-family: var(--sans);
+  font-feature-settings: 'ss01';
+  color: var(--ink);
+  background: var(--bg-frame);
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+button {
+  font-family: inherit;
+  cursor: pointer;
+  border: none;
+  background: none;
+  color: inherit;
+  padding: 0;
+}
+
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.15); border-radius: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+
+/* Utility */
+.eyebrow {
+  font-family: var(--sans);
+  font-size: 10.5px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  font-weight: 600;
+  color: var(--muted);
+}
+.eyebrow-mono {
+  font-family: var(--mono);
+  font-size: 10.5px;
+  letter-spacing: 0.10em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.serif-display {
+  font-family: var(--serif);
+  font-weight: var(--serif-weight, 400);
+  letter-spacing: -0.02em;
+}
+
+/* Painterly placeholder — striped warm canvas (Editorial) */
+.placeholder-painterly {
+  position: relative;
+  overflow: hidden;
+  background:
+    repeating-linear-gradient(
+      135deg,
+      oklch(0.62 0.08 30) 0,
+      oklch(0.62 0.08 30) 18px,
+      oklch(0.58 0.10 25) 18px,
+      oklch(0.58 0.10 25) 36px
+    );
+}
+
+/* Animations */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.fade-up { animation: fadeUp 360ms cubic-bezier(.2,.7,.2,1) both; }
+
+@keyframes pulseSoft {
+  0%, 100% { opacity: 0.9; }
+  50% { opacity: 1; }
+}
+.pulse-soft { animation: pulseSoft 2.6s ease-in-out infinite; }
+
+/* ─── Erişilebilirlik ─────────────────────────────────────────
+   Klavyeyle gezenin nerede olduğunu görmesi gerek. :focus-visible
+   kullanıyoruz: fareyle tıklamada halka çıkmaz, Tab'la çıkar. */
+:focus-visible {
+  /* !important: bazı bileşenler seçili durumu için inline outline kullanıyor;
+     odak göstergesi erişilebilirlik garantisi olduğu için onu geçmeli.
+     border-radius bilerek ayarlanmıyor — outline zaten öğenin köşesini izler. */
+  outline: 2px solid var(--accent) !important;
+  outline-offset: 2px !important;
+}
+/* Tarayıcının kendi soluk halkası, yukarıdaki kural devreye girdiğinde fazlalık. */
+:focus:not(:focus-visible) { outline: none; }
+
+/* Hareket duyarlılığı (vestibüler rahatsızlık, migren) olanlar için:
+   animasyonu kaldır ama .fade-up'ın 'both' dolgusuna bağlı son durumu koru. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* SVG plot lines */
+.plot-grid line { stroke: var(--line-soft); stroke-width: 1; }
+.plot-axis text { fill: var(--muted-2); font-family: var(--mono); font-size: 9px; }
+
+/* ─────────────────────────────────────────────
+   Mobile / responsive
+   The mobile shell (.lunara-mobile) only mounts at ≤720px, so we scope
+   the collapse rules to that class — width-independent, which also makes
+   the phone-frame preview render correctly.
+   ───────────────────────────────────────────── */
+@keyframes sheetUp {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+.sheet-up { animation: sheetUp 260ms cubic-bezier(.2,.7,.2,1) both; }
+
+/* tighten every screen's outer padding */
+.lunara-mobile .fade-up > div {
+  padding: 12px 16px 28px !important;
+  gap: 16px !important;
+}
+/* collapse top-level layout grids */
+.lunara-mobile .mb-stack { grid-template-columns: 1fr !important; }
+.lunara-mobile .mb-2 { grid-template-columns: 1fr 1fr !important; }
+.lunara-mobile .mb-phasesel {
+  display: grid !important;
+  grid-template-columns: 1fr 1fr !important;
+  gap: 8px !important;
+}
+/* keep charts inside the viewport */
+.lunara-mobile .chart { max-width: 100%; height: auto; }
+/* smaller display type so headings fit narrow screens */
+.lunara-mobile h1.serif-display,
+.lunara-mobile h2.serif-display { font-size: 26px !important; }
+
+@media (max-width: 720px) {
+  html, body { background: var(--ivory); }
+  /* hide the desktop "Logo studio" jump link on phones */
+  a[href="Lunara Logo.html"] { display: none !important; }
+}
+
+
+
+/* ── Print: isolate the doctor summary ── */
+@media print {
+  body * { visibility: hidden !important; }
+  #doctor-summary, #doctor-summary * { visibility: visible !important; }
+  #doctor-summary {
+    position: absolute; left: 0; top: 0; width: 100%;
+    box-shadow: none !important; border-radius: 0 !important; padding: 0 !important;
+  }
+  .doc-overlay { position: absolute !important; inset: 0 !important; background: #fff !important; padding: 0 !important; }
+  .no-print { display: none !important; }
+}
