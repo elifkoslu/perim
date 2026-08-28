@@ -274,8 +274,11 @@ function SideRail({ active = 'home', onNav, profile, stage = 'cycle' }) {
    Vektör sürüm public/favicon.svg içinde (16 px'te raster bulanıklaşıyor). */
 
 function Logo({ size = 28 }) {
+  /* İki çizim var: 48px ve üzeri tam detaylı nokta döngüsü, altında
+     indirgenmiş sürüm (kesintili halka + kalın kanat). Noktalar küçük
+     boyutta okunmuyor, eşik ikon setinin kendi kuralından geliyor. */
   return (
-    <img src={size < 40 ? '/mark-bold.png' : '/mark.png'} alt="Perim"
+    <img src={size < 48 ? '/mark-bold.png' : '/mark.png'} alt="Perim"
          width={size} height={size} style={{ display: 'block', flexShrink: 0 }}/>
   );
 }
