@@ -183,9 +183,11 @@ function ScreenHead({ eyebrow, title, accent, right }) {
   );
 }
 
-function Btn({ children, primary, onClick, style }) {
+function Btn({ children, primary, onClick, style, disabled }) {
   return (
-    <button onClick={onClick} style={{
+    <button onClick={onClick} disabled={disabled} style={{
+      cursor: disabled ? 'default' : 'pointer',
+      opacity: disabled ? 0.45 : 1,
       padding: '10px 16px', borderRadius: 999,
       background: primary ? 'var(--ink)' : 'transparent',
       color: primary ? 'var(--ivory)' : 'var(--ink-2)',

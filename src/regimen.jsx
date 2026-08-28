@@ -410,7 +410,7 @@ function MedEditRow({ med, max, api, color }) {
                 const on = med.when === w;
                 return (
                   <button key={w} onClick={() => api.updateMed(med.id, { when: w, time: WHEN_TIMES[w] })} style={{
-                    flex: 1, padding: '8px 0', borderRadius: 8, fontSize: 11.5, cursor: 'pointer',
+                    flex: '1 1 64px', minWidth: 0, padding: '8px 2px', borderRadius: 8, fontSize: 11.5, cursor: 'pointer',
                     background: on ? 'var(--ink)' : 'var(--bone)', color: on ? 'var(--ivory)' : 'var(--ink-2)',
                     boxShadow: on ? 'none' : 'inset 0 0 0 1px var(--line-soft)', fontWeight: on ? 700 : 500,
                   }}>{whenLabel(w)}</button>
@@ -432,7 +432,11 @@ function MedAddForm({ max, onAdd, onCancel }) {
   const [time, setTime] = React.useState(WHEN_TIMES.morning);
   const [start, setStart] = React.useState(1);
   const [end, setEnd] = React.useState(max);
-  const submit = () => { if (name.trim()) onAdd({ name: name.trim(), nameTr: name.trim(), dose: dose.trim() || '\u2014', when, time, startDay: start, endDay: end }); };
+  /* Ad boşken buton sessizce hiçbir şey yapmıyordu: etkin görünüyor,
+     dokunuyorsun, hiçbir şey olmuyor ve sebebi söylenmiyordu. Artık buton
+     devre dışı ve yanında niye olduğu yazıyor. */
+  const gecerli = name.trim().length > 0;
+  const submit = () => { if (gecerli) onAdd({ name: name.trim(), nameTr: name.trim(), dose: dose.trim() || '\u2014', when, time, startDay: start, endDay: end }); };
   return (
     <div style={{ marginTop: 14, padding: 16, borderRadius: 12, border: '1px solid var(--line)', background: 'var(--ivory)', display: 'flex', flexDirection: 'column', gap: 12 }}>
       <div className="eyebrow">{t('New medication', 'Yeni ilaç')}</div>
@@ -451,7 +455,7 @@ function MedAddForm({ max, onAdd, onCancel }) {
             const on = when === w;
             return (
               <button key={w} onClick={() => { setWhen(w); setTime(WHEN_TIMES[w]); }} style={{
-                flex: 1, padding: '8px 0', borderRadius: 8, fontSize: 11.5, cursor: 'pointer',
+                flex: '1 1 64px', minWidth: 0, padding: '8px 2px', borderRadius: 8, fontSize: 11.5, cursor: 'pointer',
                 background: on ? 'var(--ink)' : 'var(--bone)', color: on ? 'var(--ivory)' : 'var(--ink-2)',
                 boxShadow: on ? 'none' : 'inset 0 0 0 1px var(--line-soft)', fontWeight: on ? 700 : 500,
               }}>{whenLabel(w)}</button>
@@ -461,7 +465,12 @@ function MedAddForm({ max, onAdd, onCancel }) {
       </div>
       <DayRange start={start} end={end} max={max} onChange={(s, e) => { setStart(s); setEnd(e); }}/>
       <div style={{ display: 'flex', gap: 10, marginTop: 2 }}>
-        <Btn primary onClick={submit}><Icon d={ICONS.check} size={13} sw={2}/> {t('Add', 'Ekle')}</Btn>
+        <Btn primary onClick={submit} disabled={!gecerli}><Icon d={ICONS.check} size={13} sw={2}/> {t('Add', 'Ekle')}</Btn>
+        {!gecerli && (
+          <span style={{ fontSize: 12, color: 'var(--muted)', alignSelf: 'center' }}>
+            {t('Enter a name first', 'Önce bir ad gir')}
+          </span>
+        )}
         <Btn onClick={onCancel}>{t('Cancel', 'İptal')}</Btn>
       </div>
     </div>

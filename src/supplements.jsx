@@ -141,11 +141,11 @@ function SupplementsPanel({ lunara, api, logDate }) {
                 onKeyDown={e => e.key === 'Enter' && submit()}
                 style={inp(1)}/>
             </div>
-            <div style={{ display: 'flex', gap: 6 }}>
+            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
               {WHEN_OPTS.map(w => (
                 <button key={w} onClick={() => setWhen(w)}
                   style={{
-                    flex: 1, padding: '8px 4px', borderRadius: 8, fontSize: 11, cursor: 'pointer',
+                    flex: '1 1 64px', minWidth: 0, padding: '8px 4px', borderRadius: 8, fontSize: 11, cursor: 'pointer',
                     textTransform: 'capitalize', fontFamily: 'var(--sans)',
                     background: when === w ? 'var(--ink)' : 'var(--card)',
                     color: when === w ? 'var(--ivory)' : 'var(--muted)',

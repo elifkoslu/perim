@@ -225,6 +225,10 @@ button {
 }
 /* collapse top-level layout grids */
 .lunara-mobile .mb-stack { grid-template-columns: 1fr !important; }
+/* Izgara öğeleri varsayılan olarak min-width:auto taşır, yani içeriklerinin
+   min-content genişliğinin altına inemezler. Sarmalanmayan tek bir satır
+   (örn. "Sabah Öğle Akşam Yatmadan") tüm sütunu ekrandan taşırıyordu. */
+.lunara-mobile .mb-stack > * { min-width: 0; }
 .lunara-mobile .mb-2 { grid-template-columns: 1fr 1fr !important; }
 .lunara-mobile .mb-phasesel {
   display: grid !important;
