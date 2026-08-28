@@ -3,7 +3,7 @@ import { t, useLang } from './i18n';
 import { MonthNav, WeekdayRow, useMonthView } from './month-grid';
 import {
   PHASE_TINT, bleedExpected, bledOn, cycleDayFrom, cycleLenOf,
-  hasCycleAnchor, phaseLabel, phaseOf, phaseRange, ScreenHead, wrap,
+  hasCycleAnchor, phaseLabel, phaseOf, phaseRange, wrap,
 } from './screens';
 import { Card, ICONS, Icon, TODAY_DATE, TODAY_KEY, getTodayKey, medTaken, todaysDoses } from './shared';
 
@@ -39,6 +39,7 @@ function gunKaydi(lunara, key) {
 function PerimHome({ lunara, api, onNav }) {
   const { go, isCurrentMonth, monthLabel, weekdays, cells } = useMonthView();
   useLang();
+  const [aciklama, setAciklama] = React.useState(false);
   const L = cycleLenOf(lunara);
   const gun = cycleDayFrom(lunara && lunara.periodStart, TODAY_DATE, L);
   const ph = phaseOf(gun, L);
@@ -49,16 +50,18 @@ function PerimHome({ lunara, api, onNav }) {
 
   return (
     <div style={wrap}>
-      <ScreenHead
-        eyebrow={capa
-          ? t(`CYCLE DAY ${gun} · ${L}-DAY`, `DÖNGÜ GÜNÜ ${gun} · ${L} GÜNLÜK`)
-          : t('CYCLE NOT SET YET', 'DÖNGÜ HENÜZ BELİRLENMEDİ')}
-        title={capa && ph ? phaseLabel(ph) : t('Your month', 'Ayın')}/>
-
       <Card>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14, gap: 12, flexWrap: 'wrap' }}>
           <div>
-            <div className="eyebrow">{capa ? t('Cycle calendar', 'Döngü takvimi') : t('This month', 'Bu ay')}</div>
+            {/* Eskiden üç başlık katmanı vardı: dış eyebrow, dev "Luteal"
+                başlığı, ve kartın kendi başlığı — ilk ekranın ~180px'ini
+                yiyordu. Hepsi tek satıra indi; faz bilgisi zaten takvimin
+                renklerinde de var. */}
+            <div className="eyebrow">
+              {capa && ph
+                ? t(`DAY ${gun} · ${phaseLabel(ph)} · ${L}-DAY`, `${gun}. GÜN · ${phaseLabel(ph)} · ${L} GÜNLÜK`)
+                : t('CYCLE NOT SET YET', 'DÖNGÜ HENÜZ BELİRLENMEDİ')}
+            </div>
             <div style={{ fontSize: 11.5, color: 'var(--muted)', marginTop: 3 }}>
               {capa
                 ? t('Tap a day to log bleeding', 'Kanamayı işaretlemek için güne dokun')
@@ -94,7 +97,7 @@ function PerimHome({ lunara, api, onNav }) {
                 style={{
                   position: 'relative', display: 'flex', flexDirection: 'column',
                   alignItems: 'center', justifyContent: 'flex-start', gap: 3,
-                  padding: '7px 2px 8px', borderRadius: 10, minHeight: 58, width: '100%',
+                  padding: '7px 2px 8px', borderRadius: 10, minHeight: 48, width: '100%',
                   background: oldu ? KANAMA_ZEMIN : (faz ? PHASE_TINT[faz.key] + FAZ_ALFA : 'var(--ivory)'),
                   boxShadow: c.isToday ? '0 0 0 2px var(--ink)' : 'inset 0 0 0 1px var(--line-soft)',
                   outline: bekleniyor ? `1.5px dashed ${BEKLENEN_CIZGI}` : 'none',
@@ -104,9 +107,6 @@ function PerimHome({ lunara, api, onNav }) {
                 }}>
                 <span style={{ fontFamily: 'var(--serif)', fontSize: 15, lineHeight: 1,
                   fontWeight: c.isToday ? 700 : 400, color: 'var(--ink)' }}>{c.d}</span>
-                <span style={{ fontFamily: 'var(--mono)', fontSize: 8.5, color: 'var(--muted-2)' }}>
-                  {cd == null ? '' : cd}
-                </span>
                 {/* takip noktaları — o gün ne kaydedilmiş */}
                 <span style={{ display: 'flex', gap: 2.5, marginTop: 'auto', height: 5 }}>
                   {kayit.belirti && <i style={{ width: 5, height: 5, borderRadius: '50%', background: 'var(--accent)' }}/>}
@@ -123,33 +123,50 @@ function PerimHome({ lunara, api, onNav }) {
           })}
         </div>
 
-        {/* Renk tek başına kimlik taşımıyor — açıklama zorunlu */}
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '7px 14px', marginTop: 14, paddingTop: 12, borderTop: '1px solid var(--line-soft)' }}>
-          {capa && ['menstrual', 'follicular', 'ovulation', 'luteal'].map(k => (
-            <span key={k} style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 11, color: 'var(--muted)' }}>
-              <span style={{ width: 13, height: 4, borderRadius: 2, background: PHASE_TINT[k] }}/>
-              {phaseLabel(phaseOf(k === 'menstrual' ? 1 : k === 'follicular' ? 7 : k === 'ovulation' ? (L - 14) : (L - 4), L))}
-            </span>
-          ))}
-        </div>
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '7px 14px', marginTop: 7 }}>
-          {capa && (
-            <span style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 11, color: 'var(--muted)' }}>
-              <span style={{ width: 13, height: 13, borderRadius: 4, border: `1.5px dashed ${BEKLENEN_CIZGI}` }}/>
-              {t('bleeding expected', 'beklenen kanama')}
-            </span>
+        {/* Açıklama katlanır: dokuz kalem, üç satır ve takvimden sonra koca
+            bir blok oluyordu. Renk tek başına kimlik taşımadığı için hâlâ
+            erişilebilir olmalı — sadece varsayılan olarak kapalı. */}
+        <div style={{ marginTop: 12, paddingTop: 10, borderTop: '1px solid var(--line-soft)' }}>
+          <button onClick={() => setAciklama(v => !v)} aria-expanded={aciklama}
+            style={{
+              display: 'flex', alignItems: 'center', gap: 6, padding: 0, background: 'transparent',
+              border: 'none', cursor: 'pointer', fontSize: 11.5, color: 'var(--muted)', fontFamily: 'var(--sans)',
+            }}>
+            {t('What the colours mean', 'Renkler ne anlama geliyor')}
+            <span style={{ fontSize: 13 }}>{aciklama ? '−' : '+'}</span>
+          </button>
+
+          {aciklama && (
+            <div className="fade-up" style={{ marginTop: 10 }}>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '7px 14px' }}>
+                {capa && ['menstrual', 'follicular', 'ovulation', 'luteal'].map(k => (
+                  <span key={k} style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 11, color: 'var(--muted)' }}>
+                    <span style={{ width: 13, height: 4, borderRadius: 2, background: PHASE_TINT[k] }}/>
+                    {phaseLabel(phaseOf(k === 'menstrual' ? 1 : k === 'follicular' ? 7 : k === 'ovulation' ? (L - 14) : (L - 4), L))}
+                  </span>
+                ))}
+              </div>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '7px 14px', marginTop: 7 }}>
+                {capa && (
+                  <span style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 11, color: 'var(--muted)' }}>
+                    <span style={{ width: 13, height: 13, borderRadius: 4, border: `1.5px dashed ${BEKLENEN_CIZGI}` }}/>
+                    {t('bleeding expected', 'beklenen kanama')}
+                  </span>
+                )}
+                <span style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 11, color: 'var(--muted)' }}>
+                  <span style={{ width: 13, height: 13, borderRadius: 4, background: KANAMA_ZEMIN }}/>
+                  {t('bleeding logged', 'gerçekleşen kanama')}
+                </span>
+                {[['var(--accent)', t('symptoms', 'belirti')],
+                  [PHASE_TINT.luteal, t('doses', 'doz')],
+                  [PHASE_TINT.follicular, t('movement', 'hareket')]].map(([renk, ad]) => (
+                  <span key={ad} style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 11, color: 'var(--muted)' }}>
+                    <span style={{ width: 6, height: 6, borderRadius: '50%', background: renk }}/>{ad}
+                  </span>
+                ))}
+              </div>
+            </div>
           )}
-          <span style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 11, color: 'var(--muted)' }}>
-            <span style={{ width: 13, height: 13, borderRadius: 4, background: KANAMA_ZEMIN }}/>
-            {t('bleeding logged', 'gerçekleşen kanama')}
-          </span>
-          {[['var(--accent)', t('symptoms', 'belirti')],
-            [PHASE_TINT.luteal, t('doses', 'doz')],
-            [PHASE_TINT.follicular, t('movement', 'hareket')]].map(([renk, ad]) => (
-            <span key={ad} style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 11, color: 'var(--muted)' }}>
-              <span style={{ width: 6, height: 6, borderRadius: '50%', background: renk }}/>{ad}
-            </span>
-          ))}
         </div>
       </Card>
 
@@ -197,7 +214,9 @@ function DurumRozeti({ tamam, etiket, ikon, onClick }) {
       }}>
         <Icon d={tamam ? ICONS.check : ikon} size={15} sw={tamam ? 2 : 1.5}/>
       </span>
-      <span style={{ fontSize: 13, color: 'var(--ink)', lineHeight: 1.35 }}>{etiket}</span>
+      <span style={{ flex: 1, fontSize: 13, color: 'var(--ink)', lineHeight: 1.35 }}>{etiket}</span>
+      {/* Bitmemiş olan bir çağrı, bitmiş olan bir durum — aynı görünmemeliler */}
+      {!tamam && <Icon d={ICONS.arrow} size={13} stroke="var(--muted-2)"/>}
     </button>
   );
 }
