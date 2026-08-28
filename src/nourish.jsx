@@ -653,10 +653,12 @@ function MoveScreen({ lunara, api }) {
 
   return (
     <div style={{ padding: '18px 36px 48px', display: 'flex', flexDirection: 'column', gap: 20 }}>
-      <ScreenHead eyebrow={t('STRENGTH · PELVIC FLOOR · BONE', 'KUVVET · PELVİK TABAN · KEMİK')} title={t('Movement', 'Hareket')}
-        right={<span style={{ fontSize: 12.5, color: 'var(--muted)', fontStyle: 'italic', fontFamily: 'var(--serif)' }}>
-          {t('Built for perimenopause', 'Perimenopoza göre')}
-        </span>} />
+      {/* Diğer ekranlardaki ile aynı sıkıştırma: başlık ~180 px yiyordu ve
+          alt bar zaten hangi bölümde olduğunu söylüyor. Ayrıca bar
+          "Hareketler" derken başlık "Hareket" diyordu. */}
+      <div className="eyebrow" style={{ marginBottom: 2 }}>
+        {t('STRENGTH · PELVIC FLOOR · BONE', 'KUVVET · PELVİK TABAN · KEMİK')}
+      </div>
 
       {/* Perimenopause priorities — order: bone loading, pelvic floor, strength */}
       <JumpTrainer lunara={lunara} api={api}/>

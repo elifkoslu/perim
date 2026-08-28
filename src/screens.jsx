@@ -1169,7 +1169,7 @@ function CycleScreen({ lunara, api }) {
    aksadım" sorusunu tek bakışta cevaplıyor. Her gün alınan/planlanan oranına
    göre doluyor; planlı doz olmayan gün boş kalır, atlanan günden ayrılsın diye
    ince bir çizgiyle işaretlenir. */
-function AdherenceMonth({ lunara, adh30 }) {
+function AdherenceMonth({ lunara, adh30, gunSayisi }) {
   const { go, isCurrentMonth, monthLabel, weekdays, cells } = useMonthView();
   useLang();
 
@@ -1191,8 +1191,11 @@ function AdherenceMonth({ lunara, adh30 }) {
             <div key={c.key} title={planli > 0 ? `${c.d}: ${alinan}/${planli}` : String(c.d)}
               style={{
                 position: 'relative', overflow: 'hidden',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                height: 34, borderRadius: 9,
+                /* Sayı ortadaydı ve dolgu %50'ye gelince tam sayının üstünden
+                   geçiyordu: yarısı koyu zeminde koyu mürekkep, okunmuyordu.
+                   Sayı üste alındı; dolgu ancak %100'e yaklaşınca ona değer. */
+                display: 'flex', alignItems: 'flex-start', justifyContent: 'center',
+                paddingTop: 4, height: 34, borderRadius: 9,
                 background: planli > 0 ? 'var(--bone)' : 'transparent',
                 boxShadow: c.isToday ? 'inset 0 0 0 2px var(--ink)' : 'inset 0 0 0 1px var(--line-soft)',
                 opacity: c.isFuture ? 0.4 : 1,
@@ -1202,14 +1205,19 @@ function AdherenceMonth({ lunara, adh30 }) {
                   height: `${oran * 100}%`, background: 'var(--accent)', opacity: 0.85 }}/>
               )}
               <span style={{ position: 'relative', fontFamily: 'var(--mono)', fontSize: 11,
-                color: oran > 0.5 ? 'var(--ivory)' : 'var(--ink-2)' }}>{c.d}</span>
+                color: oran > 0.9 ? 'var(--ivory)' : 'var(--ink-2)' }}>{c.d}</span>
             </div>
           );
         })}
       </div>
 
       <div style={{ marginTop: 14, paddingTop: 14, borderTop: '1px solid var(--line-soft)', display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
-        <span style={{ fontSize: 12, color: 'var(--muted)' }}>{t('30-day adherence', '30 günlük uyum')}</span>
+        {/* Gün sayısı takip başlangıcından geliyor; sabit "30 günlük" demek,
+            takibin başlamadığı günleri de kaçırılmış gibi gösterirdi. */}
+        <span style={{ fontSize: 12, color: 'var(--muted)' }}>
+          {gunSayisi ? t(`Adherence · ${gunSayisi} days tracked`, `Uyum · ${gunSayisi} gün takip`)
+                     : t('30-day adherence', '30 günlük uyum')}
+        </span>
         <span style={{ fontFamily: 'var(--serif)', fontSize: 16 }}>{adh30 == null ? '—' : t(adh30 + '%', '%' + adh30)}</span>
       </div>
     </Card>
