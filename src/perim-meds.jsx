@@ -1,11 +1,11 @@
 import React from 'react';
 import { t, useLang } from './i18n';
-import { MealLog, ProteinTracker } from './nourish';
+import { MealLog, ProteinTracker, SeedCycle } from './nourish';
 import { ReferenceCard } from './reference-card';
 import { RegimenEditor } from './regimen';
 import {
-  Btn, ScreenHead, TakenAmount, cycleDayFrom, cycleLenOf,
-  doseAmountOf, doseUnitOf, wrap,
+  Btn, PHASE_TINT, ScreenHead, TakenAmount, cycleDayFrom, cycleLenOf,
+  doseAmountOf, doseUnitOf, phaseOf, wrap,
 } from './screens';
 import { SupplementsPanel } from './supplements';
 import { WaterCard } from './water';
@@ -37,6 +37,7 @@ function PerimMeds({ lunara, api, logDate, setLogDate }) {
   const dk = logDate || getTodayKey();
   const L = cycleLenOf(lunara);
   const gun = cycleDayFrom(lunara && lunara.periodStart, TODAY_DATE, L);
+  const faz = phaseOf(gun, L);
   const { meds } = todaysDoses(lunara);
   const alinan = meds.filter(d => medTaken(lunara, d.id)).length;
   const rejimYok = !lunara.regimen || (lunara.regimen.meds || []).length === 0;
@@ -130,6 +131,15 @@ function PerimMeds({ lunara, api, logDate, setLogDate }) {
           <ProteinTracker lunara={lunara} api={api}/>
           <WaterCard lunara={lunara} api={api} dateKey={dk}/>
           <MealLog lunara={lunara} api={api} dk={dk} setDk={setLogDate}/>
+          {/* Tohum döngüsü döngü fazına bağlı beslenme — Yemekler'e ait.
+              Faz bilinmiyorsa gösterilmiyor: hangi yarıda olduğunu
+              söyleyemezken tohum önermek anlamsız. */}
+          {faz && (
+            <Card>
+              <SeedCycle phaseKey={faz.key} liveKey={faz.key} tint={PHASE_TINT[faz.key]}
+                standalone cycleLength={L}/>
+            </Card>
+          )}
         </>
       )}
     </div>

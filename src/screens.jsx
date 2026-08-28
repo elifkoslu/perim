@@ -110,6 +110,17 @@ function bleedExpected(cycleDay, cycleLength) {
    Beslenme ve Hareket ekranlarında bu aralıklar sabit metindi ("19.–32. günler")
    ve örnek hastanın 32 günlük döngüsünden kalmıştı — 28 günlük bir kullanıcıda
    döngü takvimiyle çelişiyordu. Artık phaseBounds ile aynı kaynaktan geliyor. */
+/* Tohum döngüsünün iki yarısının gün aralığı.
+   Protokol ovülasyona bağlıdır: birinci yarı 1. günden ovülasyona (keten +
+   kabak), ikinci yarı ovülasyondan döngü sonuna (susam + ay çekirdeği).
+   Metin sabit "1.–14." / "15.–28." yazıyordu; 35 günlük bir döngüde ikinci
+   yarı 7 gün erken başlamış gibi görünüyordu. phaseBounds ile aynı kaynak. */
+function seedRange(half, cycleLength) {
+  const b = phaseBounds(cycleLength);
+  const [from, to] = half === 'first' ? [1, b.ov] : [b.ov + 1, b.L];
+  return I18N.lang === 'tr' ? `${from}.–${to}. günler` : `Days ${from}–${to}`;
+}
+
 function phaseRange(key, cycleLength) {
   const b = phaseBounds(cycleLength);
   const [from, to] = key === 'menstrual' ? [1, b.bleedEnd]
@@ -1538,4 +1549,4 @@ function careQuickPrompts(stage, phaseKey) {
   return sets[stage] || sets.cycle;
 }
 
-export { AdherenceMonth, TakenAmount, doseAmountOf, doseUnitOf, CYCLE_LEN, cycleLenOf, phaseBounds, daysBetween, cycleDayFrom, hasCycleAnchor, phaseOf, phaseLabel, phaseRange, bledOn, bleedExpected, MOON_NAMES_TR, moonName, PHASE_TINT, moonPhase, MoonDisc, ScreenHead, Btn, wrap, DosesScreen, RATE_LABELS, RATE_LABELS_TR, rateLabel, realSeries, SymptomsScreen, LabsScreen, labNote, CycleScreen, CycleRing, CareScreen, LibraryScreen, careQuickPrompts };
+export { AdherenceMonth, TakenAmount, doseAmountOf, doseUnitOf, CYCLE_LEN, cycleLenOf, phaseBounds, daysBetween, cycleDayFrom, hasCycleAnchor, phaseOf, phaseLabel, phaseRange, seedRange, bledOn, bleedExpected, MOON_NAMES_TR, moonName, PHASE_TINT, moonPhase, MoonDisc, ScreenHead, Btn, wrap, DosesScreen, RATE_LABELS, RATE_LABELS_TR, rateLabel, realSeries, SymptomsScreen, LabsScreen, labNote, CycleScreen, CycleRing, CareScreen, LibraryScreen, careQuickPrompts };

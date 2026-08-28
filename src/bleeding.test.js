@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { bleedExpected, bledOn, phaseOf, phaseRange } from './screens.jsx';
+import { bleedExpected, bledOn, phaseBounds, phaseOf, phaseRange, seedRange } from './screens.jsx';
 import { sonKanamaBasi } from './shared.jsx';
 
 /* Beklenen kanama döngü matematiğinden, gerçekleşen kanama kullanıcının
@@ -110,6 +110,41 @@ describe('phaseRange', () => {
         const gunler = bulunan[k];
         expect(sinir(k, L)).toEqual([gunler[0], gunler[gunler.length - 1]]);
       }
+    }
+  });
+});
+
+describe('seedRange', () => {
+  const sinir = (half, L) => seedRange(half, L).match(/\d+/g).map(Number);
+
+  /* REGRESYON: tohum döngüsü aralıkları sabit metindi ("1.–14." / "15.–28.").
+     Protokol aslında ovülasyona bağlı; 35 günlük bir döngüde ikinci yarı
+     7 gün erken başlamış gibi görünüyordu. */
+  it('28 günlük döngüde geleneksel 1–14 / 15–28 bölünmesini verir', () => {
+    expect(sinir('first', 28)).toEqual([1, 14]);
+    expect(sinir('second', 28)).toEqual([15, 28]);
+  });
+
+  it('döngü uzadıkça bölünme ovülasyonla birlikte kayar', () => {
+    expect(sinir('first', 35)).toEqual([1, 21]);
+    expect(sinir('second', 35)).toEqual([22, 35]);
+    expect(sinir('first', 21)).toEqual([1, 10]);
+    expect(sinir('second', 21)).toEqual([11, 21]);
+  });
+
+  it('iki yarı döngüyü boşluksuz ve örtüşmesiz kaplar', () => {
+    for (const L of [21, 24, 28, 32, 35, 45]) {
+      const [a1, a2] = sinir('first', L);
+      const [b1, b2] = sinir('second', L);
+      expect(a1).toBe(1);
+      expect(b1).toBe(a2 + 1);   // boşluk ya da örtüşme yok
+      expect(b2).toBe(L);
+    }
+  });
+
+  it('bölünme noktası phaseBounds ile aynı ovülasyon gününü kullanır', () => {
+    for (const L of [21, 28, 35, 45]) {
+      expect(sinir('first', L)[1]).toBe(phaseBounds(L).ov);
     }
   });
 });
