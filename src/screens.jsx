@@ -4,6 +4,7 @@ import { DoseCalendar } from './dose-calendar';
 import { ImportLabModal } from './lab-import';
 import { RegimenEditor } from './regimen';
 import { DoctorSummary } from './doctor-summary';
+import { PHASE_TINT } from './phase-colors';
 import { libraryFor, symptomsFor } from './screen-content';
 import { Card, DateNav, ICONS, Icon, LABS, Logo, RangeBar, SilBtn, SYMPTOMS, Sparkline, SymptomTrack, TODAY_DATE, TODAY_KEY, activeMeds, getTodayKey, labCurrent, labHistory, labReadings, medTaken, nowHM, regimenDay, todaysDoses, whenLabel } from './shared';
 import { STAGES } from './stages';
@@ -69,19 +70,6 @@ const MOON_NAMES_TR = {
   'Last quarter': 'Son dördün', 'Waning crescent': 'Son hilal',
 };
 function moonName(moon) { return I18N.lang === 'tr' ? (MOON_NAMES_TR[moon.name] || moon.name) : moon.name; }
-/* Faz renkleri. Eski dört ton (kırmızı/kehribar/turuncu/adaçayı) aynı sıcak
-   aileden geliyordu: renk körlüğü simülasyonunda ovulasyon↔folliküler ΔE 2.0,
-   tam renk görüşünde bile ovulasyon↔menstrüel ΔE 5.8 — ayırt edilemiyorlardı.
-   Bunlar, doğrulanmış paletin sekiz durağı arasından her çiftin hem açık hem
-   koyu yüzeyde geçtiği iki dörtlüden biri. CVD ayrımı 6.9 (8 hedefinin altı)
-   ve sarı/pembe zeminle 3:1 kontrastın altında kaldığı için renk tek başına
-   kimlik taşımıyor: her kullanıldığı yerde yanında yazılı faz adı var. */
-const PHASE_TINT = {
-  menstrual: '#e87ba4',
-  follicular: '#008300',
-  ovulation: '#eda100',
-  luteal: '#2a78d6',
-};
 
 /* ── Kanama ────────────────────────────────────────────────────
    Beklenen kanama döngü matematiğinden gelir; gerçekleşen kanama

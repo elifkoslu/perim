@@ -1,6 +1,7 @@
 import React from 'react';
 import { I18N, t, useLang } from './i18n';
 import { Card, labReadings } from './shared';
+import { PHASE_TINT } from './phase-colors';
 import { cycleDayFrom, phaseLabel as uygulamaFazAdi, phaseOf as uygulamaFazi } from './screens';
 import { referenceFor, curveFor, bandFor } from './physiology';
 
@@ -72,9 +73,58 @@ function MiniCurve({ series, day, length, color, band, olculen }) {
   );
 }
 
+
+/* Gün gün referans tablosu. Eğri şekli gösteriyor ama "bugün 17. gündeyim,
+   progesteron kaç olmalı" sorusunu sayıyla cevaplamıyordu.
+
+   Değerler tek bir kadının ölçümü değil, 85 sağlıklı kadının medyanı —
+   sağdaki aralık sütunu bu yüzden var: aynı günde normal sayılan yayılım
+   geniş, tek bir sayı o genişliği gizler. */
+function GunGunTablo({ L, bugun, curves }) {
+  const satirlar = [];
+  for (let g = 1; g <= L; g++) {
+    const r = referenceFor(g, L);
+    const e2 = r.values.find(v => v.key === 'e2');
+    const p4 = r.values.find(v => v.key === 'p4');
+    satirlar.push({ g, e2, p4, faz: uygulamaFazi(g, L) });
+  }
+  return (
+    <div style={{ marginTop: 14 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '34px 1fr 1fr', gap: 8, padding: '0 0 7px' }}>
+        <span className="eyebrow-mono" style={{ fontSize: 9.5, color: 'var(--muted-2)' }}>{t('DAY', 'GÜN')}</span>
+        <span className="eyebrow-mono" style={{ fontSize: 9.5, color: 'var(--muted-2)' }}>E2 pg/mL</span>
+        <span className="eyebrow-mono" style={{ fontSize: 9.5, color: 'var(--muted-2)' }}>P4 ng/mL</span>
+      </div>
+      <div style={{ maxHeight: 260, overflowY: 'auto' }}>
+        {satirlar.map(r => {
+          const buGun = r.g === bugun;
+          return (
+            <div key={r.g} style={{
+              display: 'grid', gridTemplateColumns: '34px 1fr 1fr', gap: 8, alignItems: 'center',
+              padding: '5px 6px', borderRadius: 7, marginBottom: 1,
+              background: buGun ? 'var(--accent-soft)' : 'transparent',
+            }}>
+              <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                <span style={{ width: 3, height: 13, borderRadius: 2, background: r.faz ? PHASE_TINT[r.faz.key] : 'transparent', flexShrink: 0 }}/>
+                <span style={{ fontFamily: 'var(--mono)', fontSize: 11, fontWeight: buGun ? 700 : 400, color: 'var(--ink-2)' }}>{r.g}</span>
+              </span>
+              <span style={{ fontFamily: 'var(--mono)', fontSize: 11.5, color: 'var(--ink)' }}>~{r.e2.value}</span>
+              <span style={{ fontFamily: 'var(--mono)', fontSize: 11.5, color: 'var(--ink)' }}>~{r.p4.value}</span>
+            </div>
+          );
+        })}
+      </div>
+      <p style={{ fontSize: 11, color: 'var(--muted-2)', lineHeight: 1.5, margin: '10px 0 0' }}>
+        {t('Medians from ovulatory cycles in healthy women. The normal spread on any given day is wide — see the ranges above.',
+           'Sağlıklı kadınların ovülatuar döngülerinden alınan medyanlar. Aynı günde normal sayılan yayılım geniş — yukarıdaki aralıklara bak.')}
+      </p>
+    </div>
+  );
+}
+
 /* Bu kart "bugün normalde şu seviyelerde olurdun" diyor — döngü günü
    bilinmiyorken söyleyecek bir şeyi yok, o yüzden hiç çizilmiyor. */
-function ReferenceCard({ lunara, cycleDay, altBolum, katlanir }) {
+function ReferenceCard({ lunara, cycleDay, altBolum, katlanir, gunlukTablo }) {
   // useLang bir hook; erken çıkış ondan sonra olmalı, yoksa koşullu hook
   // çağrısı olur ve React ağacı bozulur.
   useLang();
@@ -179,7 +229,7 @@ function ReferenceCard({ lunara, cycleDay, altBolum, katlanir }) {
             <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap', fontFamily: 'var(--mono)', fontSize: 10, color: 'var(--muted-2)', marginTop: 3 }}>
               <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
                 <span style={{ width: 12, height: 2, background: COLORS[v.key], flexShrink: 0 }}/>
-                {t('ovulatory', 'ovülatuar')} {v.low}–{v.high} {v.unit}
+                {ref.phaseLabel} {v.low}–{v.high} {v.unit}
               </span>
               {olculenler[v.key] && (
                 <span style={{ display: 'flex', alignItems: 'center', gap: 5, color: 'var(--ink-2)' }}>
@@ -209,6 +259,8 @@ function ReferenceCard({ lunara, cycleDay, altBolum, katlanir }) {
           </div>
         ))}
       </div>
+
+      {gunlukTablo && <GunGunTablo L={L} bugun={day} curves={curves}/>}
 
       {katlanir && (
         <button onClick={() => setAcik(false)} style={{

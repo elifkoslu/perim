@@ -5,6 +5,7 @@ import {
   PHASE_TINT, bleedExpected, bledOn, cycleDayFrom, cycleLenOf,
   hasCycleAnchor, phaseLabel, phaseOf, phaseRange, wrap,
 } from './screens';
+import { ReferenceCard } from './reference-card';
 import { Card, ICONS, Icon, TODAY_DATE, TODAY_KEY, getTodayKey, medTaken, todaysDoses } from './shared';
 
 /* perim-home.jsx — açılış ekranı: bir takvim.
@@ -193,6 +194,12 @@ function PerimHome({ lunara, api, onNav }) {
           </p>
         )}
       </Card>
+
+      {/* Normal döngü referansı — gün gün E2/P4 tablosuyla.
+          Katlanır: eğriler ve 28 satırlık tablo açık dururken "bugün ne
+          yapmalıyım" ekrandan çıkıyordu. Çapa yoksa hiç gösterilmiyor,
+          çünkü hangi gündeyiz bilinmeden gösterecek bir şey yok. */}
+      {capa && <ReferenceCard lunara={lunara} cycleDay={gun} katlanir gunlukTablo/>}
     </div>
   );
 }
