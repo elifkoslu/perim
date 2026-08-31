@@ -199,7 +199,7 @@ function PerimHome({ lunara, api, onNav }) {
           Katlanır: eğriler ve 28 satırlık tablo açık dururken "bugün ne
           yapmalıyım" ekrandan çıkıyordu. Çapa yoksa hiç gösterilmiyor,
           çünkü hangi gündeyiz bilinmeden gösterecek bir şey yok. */}
-      {capa && <ReferenceCard lunara={lunara} cycleDay={gun} katlanir gunlukTablo/>}
+      {capa && <ReferenceCard lunara={lunara} cycleDay={gun} katlanir acikBasla/>}
     </div>
   );
 }

@@ -1,7 +1,6 @@
 import React from 'react';
 import { I18N, t, useLang } from './i18n';
 import { Card, labReadings } from './shared';
-import { PHASE_TINT } from './phase-colors';
 import { cycleDayFrom, phaseLabel as uygulamaFazAdi, phaseOf as uygulamaFazi } from './screens';
 import { referenceFor, curveFor, bandFor } from './physiology';
 
@@ -24,7 +23,20 @@ const CURVE_H = 54;
    hormona ayrılmış durumda (mavi estradiol, turuncu progesteron); zarfa ayrı
    bir renk vermek o kimliği bozardı. Ayrım kesik kenar + altındaki etiketle
    yapılıyor, yani yalnızca renge yaslanmıyor. */
-function MiniCurve({ series, day, length, color, band, olculen }) {
+function MiniCurve({ series, day, length, color, band, olculen, birim, ondalik }) {
+  /* Gün gün tablo yerine eğrinin kendisi okunuyor: parmağını (ya da imleci)
+     eğrinin üstünde gezdirince o günün değeri çıkıyor. Tablo 28 satırla
+     ekranın yarısını yiyordu ve eğriyle aynı şeyi iki kez anlatıyordu.
+     touchAction 'pan-y': yatay sürükleme değeri tarar, dikey kaydırma
+     sayfada kalır — yoksa grafiğin üstünde sayfa kilitlenir. */
+  const [secim, setSecim] = React.useState(null);
+  const kutu = React.useRef(null);
+  const oku = (e) => {
+    const k = kutu.current && kutu.current.getBoundingClientRect();
+    if (!k || !k.width) return;
+    const oran = (e.clientX - k.left) / k.width;
+    setSecim(Math.max(0, Math.min(length - 1, Math.round(oran * (length - 1)))));
+  };
   // Ölçülen değer eğrinin tepesini aşabilir (BHRT'de sık); eksen ona da yer açmalı,
   // yoksa nokta grafiğin dışında kalır.
   const tepe = Math.max(
@@ -43,7 +55,27 @@ function MiniCurve({ series, day, length, color, band, olculen }) {
     ? yol(band.high) + ' ' + band.low.map((v, i) => `L${x(band.low.length - 1 - i).toFixed(1)},${y(band.low[band.low.length - 1 - i]).toFixed(1)}`).join(' ') + ' Z'
     : null;
 
+  const aktif = secim == null ? idx : secim;
+  const bicim = (v) => (ondalik ? Math.round(v * 10) / 10 : Math.round(v));
+
   return (
+    <div ref={kutu} onPointerDown={oku} onPointerMove={oku}
+         onPointerLeave={() => setSecim(null)}
+         style={{ position: 'relative', touchAction: 'pan-y', cursor: 'crosshair' }}>
+      {secim != null && (
+        /* Etiket HTML olarak duruyor, SVG <text> olarak değil: eğri
+           preserveAspectRatio="none" ile geriliyor, içine konan yazı da
+           onunla birlikte yamulurdu. */
+        <div style={{
+          position: 'absolute', top: -4, zIndex: 2, pointerEvents: 'none',
+          left: `${(secim / Math.max(1, length - 1)) * 100}%`,
+          transform: `translateX(${secim < length * 0.2 ? '0' : secim > length * 0.8 ? '-100%' : '-50%'})`,
+          background: 'var(--ink)', color: 'var(--card)', borderRadius: 6,
+          padding: '3px 7px', fontFamily: 'var(--mono)', fontSize: 10.5, whiteSpace: 'nowrap',
+        }}>
+          {secim + 1}. {t('day', 'gün')} · {bicim(series[secim])} {birim}
+        </div>
+      )}
     <svg viewBox={`0 0 ${CURVE_W} ${CURVE_H + 6}`} width="100%" height={CURVE_H + 6}
          preserveAspectRatio="none" aria-hidden="true" style={{ display: 'block', overflow: 'visible' }}>
       {zarf && <path d={zarf} fill={color} opacity="0.13"/>}
@@ -57,8 +89,8 @@ function MiniCurve({ series, day, length, color, band, olculen }) {
       )}
       {!zarf && <path d={`${d} L${CURVE_W},${CURVE_H} L0,${CURVE_H} Z`} fill={color} opacity="0.10"/>}
       <path d={d} fill="none" stroke={color} strokeWidth="2" strokeLinejoin="round" strokeLinecap="round"/>
-      <line x1={x(idx)} y1="0" x2={x(idx)} y2={CURVE_H} stroke="var(--ink)" strokeWidth="1" opacity="0.30"/>
-      <circle cx={x(idx)} cy={y(series[idx])} r="4.5" fill={color} stroke="var(--card)" strokeWidth="2"/>
+      <line x1={x(aktif)} y1="0" x2={x(aktif)} y2={CURVE_H} stroke="var(--ink)" strokeWidth="1" opacity="0.30"/>
+      <circle cx={x(aktif)} cy={y(series[aktif])} r="4.5" fill={color} stroke="var(--card)" strokeWidth="2"/>
       {/* Senin ölçülen değerin: içi boş halka, dolu referans noktasından
           ayrılsın diye. Kanın alındığı döngü gününe oturuyor. */}
       {olculen && (
@@ -70,61 +102,14 @@ function MiniCurve({ series, day, length, color, band, olculen }) {
         </g>
       )}
     </svg>
-  );
-}
-
-
-/* Gün gün referans tablosu. Eğri şekli gösteriyor ama "bugün 17. gündeyim,
-   progesteron kaç olmalı" sorusunu sayıyla cevaplamıyordu.
-
-   Değerler tek bir kadının ölçümü değil, 85 sağlıklı kadının medyanı —
-   sağdaki aralık sütunu bu yüzden var: aynı günde normal sayılan yayılım
-   geniş, tek bir sayı o genişliği gizler. */
-function GunGunTablo({ L, bugun, curves }) {
-  const satirlar = [];
-  for (let g = 1; g <= L; g++) {
-    const r = referenceFor(g, L);
-    const e2 = r.values.find(v => v.key === 'e2');
-    const p4 = r.values.find(v => v.key === 'p4');
-    satirlar.push({ g, e2, p4, faz: uygulamaFazi(g, L) });
-  }
-  return (
-    <div style={{ marginTop: 14 }}>
-      <div style={{ display: 'grid', gridTemplateColumns: '34px 1fr 1fr', gap: 8, padding: '0 0 7px' }}>
-        <span className="eyebrow-mono" style={{ fontSize: 9.5, color: 'var(--muted-2)' }}>{t('DAY', 'GÜN')}</span>
-        <span className="eyebrow-mono" style={{ fontSize: 9.5, color: 'var(--muted-2)' }}>E2 pg/mL</span>
-        <span className="eyebrow-mono" style={{ fontSize: 9.5, color: 'var(--muted-2)' }}>P4 ng/mL</span>
-      </div>
-      <div style={{ maxHeight: 260, overflowY: 'auto' }}>
-        {satirlar.map(r => {
-          const buGun = r.g === bugun;
-          return (
-            <div key={r.g} style={{
-              display: 'grid', gridTemplateColumns: '34px 1fr 1fr', gap: 8, alignItems: 'center',
-              padding: '5px 6px', borderRadius: 7, marginBottom: 1,
-              background: buGun ? 'var(--accent-soft)' : 'transparent',
-            }}>
-              <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-                <span style={{ width: 3, height: 13, borderRadius: 2, background: r.faz ? PHASE_TINT[r.faz.key] : 'transparent', flexShrink: 0 }}/>
-                <span style={{ fontFamily: 'var(--mono)', fontSize: 11, fontWeight: buGun ? 700 : 400, color: 'var(--ink-2)' }}>{r.g}</span>
-              </span>
-              <span style={{ fontFamily: 'var(--mono)', fontSize: 11.5, color: 'var(--ink)' }}>~{r.e2.value}</span>
-              <span style={{ fontFamily: 'var(--mono)', fontSize: 11.5, color: 'var(--ink)' }}>~{r.p4.value}</span>
-            </div>
-          );
-        })}
-      </div>
-      <p style={{ fontSize: 11, color: 'var(--muted-2)', lineHeight: 1.5, margin: '10px 0 0' }}>
-        {t('Medians from ovulatory cycles in healthy women. The normal spread on any given day is wide — see the ranges above.',
-           'Sağlıklı kadınların ovülatuar döngülerinden alınan medyanlar. Aynı günde normal sayılan yayılım geniş — yukarıdaki aralıklara bak.')}
-      </p>
     </div>
   );
 }
 
+
 /* Bu kart "bugün normalde şu seviyelerde olurdun" diyor — döngü günü
    bilinmiyorken söyleyecek bir şeyi yok, o yüzden hiç çizilmiyor. */
-function ReferenceCard({ lunara, cycleDay, altBolum, katlanir, gunlukTablo }) {
+function ReferenceCard({ lunara, cycleDay, altBolum, katlanir, acikBasla }) {
   // useLang bir hook; erken çıkış ondan sonra olmalı, yoksa koşullu hook
   // çağrısı olur ve React ağacı bozulur.
   useLang();
@@ -135,8 +120,11 @@ function ReferenceCard({ lunara, cycleDay, altBolum, katlanir, gunlukTablo }) {
   const fazAdi = uygulamaFazAdi(uygulamaFazi(day, L)).toLocaleLowerCase(I18N.lang === 'tr' ? 'tr' : 'en');
   /* Katlanır mod: eğriler iki büyük grafik ve altındaki dozları 500 px
      aşağı itiyordu. Kullanıcı bu ekrana doz işaretlemeye geliyor; eğri
-     bağlam, eylem değil. Kapalıyken tek satırlık özet duruyor. */
-  const [acik, setAcik] = React.useState(!katlanir);
+     bağlam, eylem değil. Kapalıyken tek satırlık özet duruyor.
+     acikBasla: kartın kendisi istenen şeyse (Perim'in ilk sayfasında
+     olduğu gibi) açık geliyor — kapalı başlayınca grafik bir dokunuşun
+     arkasında kalıyor ve fark edilmiyor. Gizle düğmesi yerinde duruyor. */
+  const [acik, setAcik] = React.useState(!katlanir || !!acikBasla);
   // Yalnızca iki ana hormon eğri olarak; LH ve testosteron sayı olarak yeter.
   const curves = { e2: curveFor('e2', L), p4: curveFor('p4', L) };
   const COLORS = { e2: '#2a78d6', p4: '#eb6834' };
@@ -225,7 +213,7 @@ function ReferenceCard({ lunara, cycleDay, altBolum, katlanir, gunlukTablo }) {
                 {v.value} <span style={{ fontSize: 11, color: 'var(--muted)' }}>{v.unit}</span>
               </span>
             </div>
-            <MiniCurve series={curves[v.key]} day={day} length={L} color={COLORS[v.key]} band={bands[v.key]} olculen={olculenler[v.key]}/>
+            <MiniCurve series={curves[v.key]} day={day} length={L} color={COLORS[v.key]} band={bands[v.key]} olculen={olculenler[v.key]} birim={v.unit} ondalik={v.key === 'p4'}/>
             <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap', fontFamily: 'var(--mono)', fontSize: 10, color: 'var(--muted-2)', marginTop: 3 }}>
               <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
                 <span style={{ width: 12, height: 2, background: COLORS[v.key], flexShrink: 0 }}/>
@@ -260,7 +248,6 @@ function ReferenceCard({ lunara, cycleDay, altBolum, katlanir, gunlukTablo }) {
         ))}
       </div>
 
-      {gunlukTablo && <GunGunTablo L={L} bugun={day} curves={curves}/>}
 
       {katlanir && (
         <button onClick={() => setAcik(false)} style={{
@@ -290,6 +277,24 @@ function ReferenceCard({ lunara, cycleDay, altBolum, katlanir, gunlukTablo }) {
                 'Düz çizgi ovülatuar bir döngü; gölgeli bant perimenopozda görülen aralık. Asimetriye dikkat et: estradiol genç bir döngüdekinden sık sık daha yüksek seyreder ve öngörülemez biçimde dalgalanır, progesteron ise çoğu döngüde ovülasyon olmadığı için çöker. Tek bir kan tahlilinin perimenopozu ne teyit ne de dışlamasının sebebi bu.')
             : t('Reference values from ovulatory cycles in healthy women. Hormone therapy does not aim to reproduce this curve.',
                 'Sağlıklı kadınların ovülatuar döngülerinden alınan referans değerler. Hormon tedavisi bu eğriyi yeniden üretmeyi amaçlamaz.')}
+        </p>
+      )}
+
+      {/* mg ile ng/mL'yi karıştırmak bu ekranda en kolay hata: kullanıcı
+          200 mg progesteron alıp eğride 12 ng/mL görünce sayıyı "çok düşük"
+          sanıyor. İkisi farklı büyüklük — biri verilen madde miktarı, öteki
+          kanda kalan derişim; aradaki oran uygulama yoluna göre değişiyor.
+          Yol tek tek sayılıyor çünkü BHRT'de üçü de yaygın ve üçünde kan
+          değerinin ne anlattığı farklı: vajinal progesteronda kan seviyesi
+          rahimdeki maruziyeti olduğundan düşük gösterir, deriden estradiolde
+          ölçüm zamanı ve uygulama yeri sonucu oynatır. */}
+      {(!katlanir || acik) && (
+        <p style={{
+          fontSize: 11.5, color: 'var(--ink-2)', lineHeight: 1.55, margin: '12px 0 0',
+          padding: '10px 12px', borderRadius: 'var(--r-md)', background: 'var(--bone)',
+        }}>
+          {t('These numbers are blood levels (pg/mL, ng/mL), not the dose you take (mg) — and how the two relate depends on the route. Vaginal progesterone bypasses the liver and concentrates in the uterus, so blood progesterone understates the exposure that route actually delivers. Estradiol cream skips first-pass metabolism too, but blood levels swing with absorption, application site and how long ago you applied it. Oral progesterone is largely broken down by the liver first. So a dose in mg cannot be read off this curve.',
+             'Buradaki sayılar kandaki seviye (pg/mL, ng/mL), aldığın doz (mg) değil — ikisi arasındaki ilişki uygulama yoluna göre değişir. Vajinal progesteron karaciğerdeki ilk geçişi atlar ve rahimde yoğunlaşır; bu yüzden kandaki progesteron, o yolun gerçekte sağladığı maruziyeti olduğundan düşük gösterir. Deriye sürülen estradiol de ilk geçişi atlar ama kan seviyesi emilime, sürdüğün bölgeye ve üstünden geçen süreye göre oynar. Ağızdan alınan progesteron ise büyük ölçüde karaciğerde yıkılır. Yani mg cinsinden bir doz bu eğriden okunamaz.')}
         </p>
       )}
 
