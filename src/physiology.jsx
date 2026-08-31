@@ -6,9 +6,10 @@ import { t } from './i18n';
    örnekleme ile ölçülmüş serum medyanlarına sabitlendi; çalışma tüm döngüleri
    29 güne, ovülasyonu 15. güne normalize ediyor (Roche Elecsys, cobas e801).
    Faz bazlı 5-95 persentil aralıkları da aynı çalışmadan.
-   Testosteron ayrı bir kaynaktan: 588 sağlıklı kadında LC-MS/MS ile ölçüm.
-   Not: kadın düzeylerinde testosteron immünoassay'i güvenilmez; buradaki
-   sayılar LC-MS/MS'e ait ve immünoassay aralıklarından belirgin düşüktür.
+   Testosteron ayrı kaynaktan: premenopozal kadınlarda ID-LC-MS/MS referans
+   aralığı 0.30-1.69 nmol/L (8.7-48.7 ng/dL); klinik laboratuvarlar da benzer
+   veriyor (LabCorp 10-55, Mayo 8-60 ng/dL). Not: kadın düzeylerinde
+   testosteron immünoassay'i güvenilmez, buradaki sayılar LC-MS/MS'e aittir.
 
    BU NE DEĞİL. Bunlar "hedef" değil, bağlamdır: normal çalışan bir yumurtalığın
    ürettiği düzeyler. Hormon tedavisinin amacı bu eğriyi yeniden üretmek değil,
@@ -29,9 +30,18 @@ const P4 = [0.1, 0.1, 0.1, 0.15, 0.15, 0.2, 0.2, 0.2, 0.25, 0.25, 0.3, 0.35, 0.4
 // LH, IU/L
 const LH = [5.5, 5.5, 5.8, 6, 6.2, 6.5, 6.8, 7, 7.2, 7.5, 8, 10, 14, 24, 20,
             9, 7, 6.5, 6.2, 6, 6, 5.9, 5.8, 5.7, 5.6, 5.5, 5.4, 5.4, 5.5];
-// Total testosteron, ng/dL (nmol/L × 28.8) — döngü içi oynama küçük (~%10)
-const TT = [9.2, 9.2, 9.3, 9.4, 9.5, 9.6, 9.7, 9.8, 9.9, 10.0, 10.1, 10.2, 10.3, 10.4, 10.3,
-            10.2, 10.1, 10.0, 10.0, 9.9, 9.9, 9.8, 9.8, 9.7, 9.6, 9.5, 9.4, 9.3, 9.2];
+/* Total testosteron, ng/dL (nmol/L × 28.8) — döngü içi oynama küçük (~%10),
+   ovülasyon çevresinde hafif yükselir.
+
+   DÜZELTME: buradaki eğri 9.2–10.4 ng/dL idi ve aralık [1.2, 29] olarak
+   yazılmıştı. Her ikisi de yayımlanmış LC-MS/MS referanslarının belirgin
+   altındaydı: ID-LC-MS/MS premenopozal aralık 0.30–1.69 nmol/L (8.7–48.7
+   ng/dL); LabCorp 10–55, Mayo 8–60 ng/dL. 30 yaşında bir kadın için 5.–95.
+   persentil 15–46 ng/dL. Yani eski eğri "tipik" değeri değil aralığın
+   tabanını gösteriyordu ve alt sınır 1.2 hiçbir kaynakta yok — muhtemelen
+   nmol/L→ng/dL çevriminde bir kayma. Medyan ~25 ng/dL çevresine alındı. */
+const TT = [23, 23, 23, 24, 24, 24, 25, 25, 26, 26, 27, 27, 28, 28, 28,
+            27, 27, 26, 26, 26, 25, 25, 25, 24, 24, 24, 23, 23, 23];
 
 /* Faz bazlı 5-95 persentil. Günlük tek bir sayı ne kadar "normal"in ortası olsa da
    sağlıklı kadınlar arasındaki yayılım geniş; aralığı da taşımak şart. */
@@ -39,7 +49,7 @@ const BANDS = {
   e2: { follicular: [31, 90],  ovulatory: [60, 534], luteal: [60, 233] },
   p4: { follicular: [0.05, 0.19], ovulatory: [0.06, 4.2], luteal: [4.1, 14.6] },
   lh: { follicular: [4.8, 13.2], ovulatory: [8.1, 72.7], luteal: [2.7, 13.1] },
-  tt: { follicular: [1.2, 29], ovulatory: [1.2, 29], luteal: [1.2, 29] },
+  tt: { follicular: [8.7, 48.7], ovulatory: [8.7, 48.7], luteal: [8.7, 48.7] },
 };
 
 /* Perimenopozda görülen aralık.

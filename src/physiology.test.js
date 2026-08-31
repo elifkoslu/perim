@@ -143,3 +143,47 @@ describe('perimenopoz zarfı', () => {
     expect(b.high[2]).toBeGreaterThan(60);
   });
 });
+
+/* Yayımlanmış referans aralıkları. Bu sayılar ekranda "normalde bugün şu
+   olurdu" diye gösteriliyor; kaynaktan sapmaları sessizce olmasın diye
+   teste bağlandı.
+
+   E2/P4/LH: 85 sağlıklı kadın, Elecsys III, cobas e801 — medyan (5-95p),
+   pmol/L ve nmol/L olarak yayımlanmış, burada uygulamanın birimlerinde.
+   TT: premenopozal ID-LC-MS/MS 0.30-1.69 nmol/L = 8.7-48.7 ng/dL. */
+describe('referans aralıkları yayımlanmış değerlerle uyuşur', () => {
+  it('estradiol: folliküler 31-90, ovulatuar 60-534, luteal 60-233 pg/mL', () => {
+    // 114-332 pmol/L ÷ 3.671 = 31-90
+    expect(referenceFor(3, 28).values.find(v => v.key === 'e2')).toMatchObject({ low: 31, high: 90 });
+    // 222-1959 ÷ 3.671 = 60-534
+    expect(referenceFor(14, 28).values.find(v => v.key === 'e2')).toMatchObject({ low: 60, high: 534 });
+    // 222-854 ÷ 3.671 = 60-233
+    expect(referenceFor(24, 28).values.find(v => v.key === 'e2')).toMatchObject({ low: 60, high: 233 });
+  });
+
+  it('progesteron: folliküler 0.05-0.19, ovulatuar 0.06-4.2, luteal 4.1-14.6 ng/mL', () => {
+    expect(referenceFor(3, 28).values.find(v => v.key === 'p4')).toMatchObject({ low: 0.05, high: 0.19 });
+    expect(referenceFor(14, 28).values.find(v => v.key === 'p4')).toMatchObject({ low: 0.06, high: 4.2 });
+    expect(referenceFor(24, 28).values.find(v => v.key === 'p4')).toMatchObject({ low: 4.1, high: 14.6 });
+  });
+
+  it('LH: ovulatuar 8.1-72.7 IU/L, zirve yayımlanmış medyana (22.6) yakın', () => {
+    const ov = referenceFor(14, 28).values.find(v => v.key === 'lh');
+    expect(ov).toMatchObject({ low: 8.1, high: 72.7 });
+    expect(ov.value).toBeGreaterThan(15);
+    expect(ov.value).toBeLessThan(35);
+  });
+
+  /* REGRESYON: testosteron eğrisi 9.2-10.4 ng/dL, aralık [1.2, 29] idi.
+     İkisi de yayımlanmış LC-MS/MS referansının altındaydı; eğri tipik
+     değeri değil aralığın tabanını gösteriyordu. */
+  it('testosteron: aralık 8.7-48.7 ng/dL ve eğri tabanda değil ortada', () => {
+    for (const g of [3, 14, 24]) {
+      const tt = referenceFor(g, 28).values.find(v => v.key === 'tt');
+      expect(tt).toMatchObject({ low: 8.7, high: 48.7 });
+      // tipik değer aralığın alt çeyreğinde olmamalı
+      expect(tt.value).toBeGreaterThan(18);
+      expect(tt.value).toBeLessThan(35);
+    }
+  });
+});
