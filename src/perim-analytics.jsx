@@ -105,6 +105,9 @@ function PerimAnalytics({ lunara, api, onNav }) {
   const kanamaGun = sonGunler(PENCERE).filter(g => bledOn(lunara, g.key) > 0).length;
   const [raporAcik, setRaporAcik] = React.useState(false);
 
+  /* Tahlil ekranı bu koşulun dışında kaldı: kendi boş durumu var ve tahlil
+     girişinin tek kapısı o. "Henüz veri yok" kartı yalnızca uyum, belirti ve
+     kanama grafikleri için. */
   const hicVeri = uyum.planli === 0 && belirtiler.length === 0
     && (lunara.labPanels || []).length === 0;
 
@@ -161,10 +164,15 @@ function PerimAnalytics({ lunara, api, onNav }) {
             </Card>
           )}
 
-          {/* Tahliller — kendi ekranı zaten grafikli */}
-          {(lunara.labPanels || []).length > 0 && <LabsScreen lunara={lunara} api={api}/>}
         </>
       )}
+
+      {/* Tahliller her zaman burada. Önce "kayıt varsa çiz" diye duruyordu ve
+          bu kendini kilitliyordu: ekran açılmadığı için "Sonuç ekle" düğmesine
+          hiç ulaşılamıyor, düğmeye ulaşılamadığı için de ilk kayıt hiç
+          oluşmuyordu. Kayıt yokken örnek eğri değil, nereden gireceğini
+          anlatan tek satır çıkıyor (orneksiz). */}
+      <LabsScreen lunara={lunara} api={api} orneksiz/>
 
       {/* Hekim raporu */}
       <Card>
