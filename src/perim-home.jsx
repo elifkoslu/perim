@@ -5,6 +5,7 @@ import {
   PHASE_TINT, bleedExpected, bledOn, cycleDayFrom, cycleLenOf,
   hasCycleAnchor, phaseLabel, phaseOf, phaseRange, wrap,
 } from './screens';
+import { AyDurumu } from './moon';
 import { ReferenceCard } from './reference-card';
 import { Card, ICONS, Icon, TODAY_DATE, TODAY_KEY, getTodayKey, medTaken, todaysDoses } from './shared';
 
@@ -193,6 +194,12 @@ function PerimHome({ lunara, api, onNav }) {
             {phaseLabel(ph)} · {phaseRange(ph.key, L)}
           </p>
         )}
+        {/* Bugünün ay evresi — katlanmış halde tek satır, açılınca
+            beden + gelenek ayrımıyla kısa açıklama. */}
+        <div style={{ marginTop: 14 }}>
+          <AyDurumu date={TODAY_DATE} phaseKey={capa && ph ? ph.key : null}
+            phaseAdi={capa && ph ? phaseLabel(ph) : ''}/>
+        </div>
       </Card>
 
       {/* Normal döngü referansı — gün gün E2/P4 tablosuyla.

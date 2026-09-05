@@ -130,11 +130,26 @@ function moonPhase(date) {
   return { frac, age, name: names[idx], illum: (1 - Math.cos(frac * 2 * Math.PI)) / 2 };
 }
 
+/* Maskedeki gölge dairesinin yeri.
+
+   Eskiden off = cos(frac·2π)·r idi ve iki yerden birden yanlıştı:
+   yeni ayda (frac 0) gölgeyi diskin tamamen dışına atıp yeni ayı yarım ay
+   gibi gösteriyor, dördünlerde (frac .25/.75) gölgeyi diskin üstüne
+   bindirip yarım ayı kararmış bir daireye çeviriyordu — ekranda bugünün
+   evresi hiçbir zaman doğru çıkmıyordu.
+
+   Doğrusu aydınlık orana bağlı: gölge yeni ayda diskin tam üstünde
+   (hiç ışık), dolunayda 2r kadar uzakta (gölge yok). Yön de terstiydi;
+   büyüyen ayda aydınlık sağdadır, dolayısıyla gölge solda kalır. */
+function moonMask(frac) {
+  const r = 42;
+  const illum = (1 - Math.cos(frac * 2 * Math.PI)) / 2;   // 0 yeni, 1 dolu
+  return { r, off: 2 * r * illum, waxing: frac < 0.5 };
+}
+
 function MoonDisc({ size = 64, frac }) {
   const m = 'moon-' + Math.round(frac * 1000);
-  const r = 42;
-  const off = Math.cos(frac * 2 * Math.PI) * r; // new→±r, full→0
-  const waxing = frac < 0.5;
+  const { r, off, waxing } = moonMask(frac);
   return (
     <svg width={size} height={size} viewBox="0 0 100 100">
       <defs>
@@ -146,7 +161,7 @@ function MoonDisc({ size = 64, frac }) {
         <mask id={m}>
           <rect width="100" height="100" fill="black"/>
           <circle cx="50" cy="50" r={r} fill="white"/>
-          <circle cx={50 + (waxing ? off : -off)} cy="50" r={r} fill="black"/>
+          <circle cx={50 + (waxing ? -off : off)} cy="50" r={r} fill="black"/>
         </mask>
       </defs>
       <circle cx="50" cy="50" r={r} fill="oklch(0.42 0.04 300)" opacity="0.18"/>
@@ -1588,4 +1603,4 @@ function careQuickPrompts(stage, phaseKey) {
   return sets[stage] || sets.cycle;
 }
 
-export { AdherenceMonth, TakenAmount, doseAmountOf, doseUnitOf, CYCLE_LEN, cycleLenOf, phaseBounds, daysBetween, cycleDayFrom, hasCycleAnchor, phaseOf, phaseLabel, phaseRange, seedRange, bledOn, bleedExpected, MOON_NAMES_TR, moonName, PHASE_TINT, moonPhase, MoonDisc, ScreenHead, Btn, wrap, DosesScreen, RATE_LABELS, RATE_LABELS_TR, rateLabel, realSeries, SymptomsScreen, LabsScreen, labNote, CycleScreen, CycleRing, CareScreen, LibraryScreen, careQuickPrompts };
+export { AdherenceMonth, TakenAmount, doseAmountOf, doseUnitOf, CYCLE_LEN, cycleLenOf, phaseBounds, daysBetween, cycleDayFrom, hasCycleAnchor, phaseOf, phaseLabel, phaseRange, seedRange, bledOn, bleedExpected, MOON_NAMES_TR, moonName, PHASE_TINT, moonPhase, moonMask, MoonDisc, ScreenHead, Btn, wrap, DosesScreen, RATE_LABELS, RATE_LABELS_TR, rateLabel, realSeries, SymptomsScreen, LabsScreen, labNote, CycleScreen, CycleRing, CareScreen, LibraryScreen, careQuickPrompts };
