@@ -1,28 +1,11 @@
 import React from 'react';
 import { t } from './i18n';
 import { ICONS, Icon, Logo, navItemsFor } from './shared';
+import { useIsMobile } from './use-mobile';
 
 /* mobile.jsx — Perim responsive mobile shell (bottom tabs + sheet) */
 /* eslint-disable */
 
-function useIsMobile(bp = 720) {
-  // URL'de ?mobile=1 varsa her zaman mobil mod (iframe telefon önizlemesi için)
-  const forced = typeof window !== 'undefined' &&
-    new URLSearchParams(window.location.search).get('mobile') === '1';
-  const q = `(max-width:${bp}px)`;
-  const detect = () => forced || (document.documentElement.clientWidth || window.innerWidth) <= bp;
-  const [m, setM] = React.useState(detect);
-  React.useEffect(() => {
-    if (forced) return;
-    const update = () => setM(detect());
-    update();
-    const mq = window.matchMedia(q);
-    mq.addEventListener('change', update);
-    window.addEventListener('resize', update);
-    return () => { mq.removeEventListener('change', update); window.removeEventListener('resize', update); };
-  }, []);
-  return m;
-}
 
 /* Perim'in beş bölümü barda birden sığıyor; "Daha" menüsüne gerek yok.
    Profil başlıktaki avatardan açılıyor. */
