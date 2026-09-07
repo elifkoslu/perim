@@ -188,7 +188,13 @@ function PerimAnalytics({ lunara, api, onNav }) {
           </span>
           <span style={{ fontSize: 16, color: 'var(--muted)' }}>{raporAcik ? '−' : '+'}</span>
         </button>
-        {raporAcik && <div style={{ marginTop: 18 }}><DoctorSummary lunara={lunara}/></div>}
+        {/* DoctorSummary ekranı kaplayan sabit bir katman (position: fixed).
+            Burada onClose geçilmiyordu: "Kapat" düğmesi de arka plana
+            tıklamak da hiçbir şey yapmıyordu ve katman alttaki aç/kapa
+            düğmesini de örttüğü için sayfayı yenilemeden çıkış kalmıyordu.
+            Saran div de işlevsizdi — çocuk fixed olduğu için marginTop
+            hiçbir zaman uygulanmıyordu. */}
+        {raporAcik && <DoctorSummary lunara={lunara} onClose={() => setRaporAcik(false)}/>}
       </Card>
     </div>
   );

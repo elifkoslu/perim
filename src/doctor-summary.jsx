@@ -192,6 +192,17 @@ function summaryText(lunara) {
 }
 
 function DoctorSummary({ lunara, onClose }) {
+  /* Escape ile kapansın: bu bileşen ekranı kaplayan sabit bir katman ve
+     kapanmanın tek yolu onClose. Bir çağrı yeri onClose geçmeyi unutunca
+     (perim-analytics.jsx'te olan buydu) kullanıcı katmanın altında kalıp
+     sayfayı yenilemek zorunda kalıyordu. Escape ikinci bir çıkış. */
+  React.useEffect(() => {
+    if (!onClose) return;
+    const esc = (e) => { if (e.key === 'Escape') onClose(); };
+    window.addEventListener('keydown', esc);
+    return () => window.removeEventListener('keydown', esc);
+  }, [onClose]);
+
   const lang = I18N.lang;
   const { p, meds, titration, latestPanel, symptomSummary, adherence, stageBlock } = buildSummary(lunara);
   const [copied, setCopied] = React.useState(false);
