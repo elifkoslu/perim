@@ -12,6 +12,7 @@ import { SupplementsPanel } from './supplements';
 import { ReferenceCard } from './reference-card';
 import { rangeForLab } from './physiology';
 import { useMonthView, MonthNav, WeekdayRow } from './month-grid';
+import { LabTimeline, LabTimelineRows, labSeries } from './lab-timeline';
 
 /* screens.jsx — Perim navigable screens (interactive, persistent) */
 /* eslint-disable */
@@ -848,6 +849,10 @@ function LabsScreen({ lunara, api, orneksiz }) {
   const drawDate = reads.length ? reads[reads.length - 1].date : null;
   const eff = effectiveRange(lab, drawDate, lunara);
   const range = eff.range;
+  /* Her ölçüm kendi tarihindeki aralığıyla eşleşiyor: referans döngü
+     gününe bağlı olduğu için tek bir aralığa vurmak yanıltıcı olurdu. */
+  const seri = labSeries(reads, (d) => effectiveRange(lab, d, lunara).range)
+    .map(r => ({ ...r, phaseLabel: effectiveRange(lab, r.date, lunara).phaseLabel }));
   const inRange = value != null && range != null && value >= range[0] && value <= range[1];
 
   const name = (l) => t(l.name, l.nameTr || l.name);
@@ -932,14 +937,27 @@ function LabsScreen({ lunara, api, orneksiz }) {
               }}>{inRange ? t('IN RANGE', 'ARALIKTA') : t('OUT OF RANGE', 'ARALIK DIŞI')}</span>
             )}
           </div>
-          {history.length > 0 && (
+          {/* Kendi verisi varsa her ölçüm kendi referans aralığıyla çizilir;
+              örnek veride aralık hesaplanamadığı için eski sparkline kalır. */}
+          {hasData && seri.length > 0 && (
+            <>
+              <div style={{ margin: '20px 0 0' }}>
+                <LabTimeline seri={seri} unit={lab.unit}/>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10, color: 'var(--muted-2)', fontFamily: 'var(--mono)', marginTop: 6 }}>
+                {dates.map((d, i) => <span key={i}>{d}</span>)}
+              </div>
+              <LabTimelineRows seri={seri} unit={lab.unit} fmtDate={fmtLabDate}/>
+            </>
+          )}
+          {!hasData && history.length > 0 && (
             <>
               <div style={{ margin: '20px 0 8px' }}>
                 <Sparkline data={history.length === 1 ? [history[0], history[0]] : history} color="var(--accent)" width={420} height={90}/>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10, color: 'var(--muted-2)', fontFamily: 'var(--mono)' }}>
-                {(hasData ? dates : dates.map(m => (I18N.lang === 'tr'
-                  ? ({Dec:'Ara',Jan:'Oca',Feb:'Şub',Mar:'Mar',Apr:'Nis',May:'May',Now:'Şimdi'}[m] || m) : m).toUpperCase()))
+                {dates.map(m => (I18N.lang === 'tr'
+                  ? ({Dec:'Ara',Jan:'Oca',Feb:'Şub',Mar:'Mar',Apr:'Nis',May:'May',Now:'Şimdi'}[m] || m) : m).toUpperCase())
                   .map((d, i) => <span key={i}>{d}</span>)}
               </div>
             </>
