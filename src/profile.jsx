@@ -42,6 +42,9 @@ const YEDEK_SEMASI = {
   postpartum:  nesneMi,
   menopause:   nesneMi,
   labPanels:   diziMi,
+  // Yedek alma zamanı da geri yüklensin: yoksa yedekten dönen kullanıcıya
+  // "hiç yedek almamışsın" uyarısı çıkar, oysa elindeki dosya yedeğin ta kendisi
+  lastExportAt: metinMi,
   titration:   diziMi,
   // meds dizi olmalı: activeMeds ve regimen ekranı doğrudan üzerinde döner
   regimen:     v => nesneMi(v) && (v.meds === undefined || diziMi(v.meds)),
