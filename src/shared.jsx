@@ -457,8 +457,15 @@ function useLunara() {
         epds: [],                // EPDS results [{ id, date, score, q10, answers }]
         ...(saved.postpartum || {}),
       },
-      // Menopause (menopoz): son regl tarihi
-      menopause: { lastPeriod: '2024-03-01', ...(saved.menopause || {}) },
+      /* Menopoz: son regl tarihi.
+
+         Burada sabit bir '2024-03-01' duruyordu ve bu alanı yazan hiçbir
+         ekran yok. Doktor özeti "mp.lastPeriod || periodStart" diye
+         okuduğu için alan hiçbir zaman boş kalmıyor, takvimden gelen
+         gerçek tarihe hiç düşmüyordu: kullanıcı takvimde son adetini
+         işaretlese bile hekime giden belgede Mart 2024 ve "30 ay" yazıyordu.
+         Klinik olarak da yanlış sinyal — 30 ay adetsizlik postmenopoz demek. */
+      menopause: { ...(saved.menopause || {}) },
       // User-entered lab panels: [{ id, date, readings:[{key,name,nameTr,unit,value}] }]
       labPanels: saved.labPanels || [],
       // BHRT titration log: [{ id, date, med, from, to, reason, note }]

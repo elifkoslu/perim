@@ -128,7 +128,10 @@ function stageBlockFor(lunara, keys) {
 
   if (st === 'menopause' || st === 'perimeno') {
     const mp = lunara.menopause || {};
-    const last = mp.lastPeriod || (st === 'perimeno' ? lunara.periodStart : null);
+    /* Perimenopozda doğru kaynak takvim: periodStart, işaretlenen kanama
+       günlerinden (sonKanamaBasi) sürekli güncelleniyor. menopause.lastPeriod
+       ancak kullanıcı ayrıca girdiyse anlamlı, o yüzden yedekte duruyor. */
+    const last = (st === 'perimeno' ? (lunara.periodStart || mp.lastPeriod) : mp.lastPeriod) || null;
     if (last) {
       const months = Math.floor(daysApart(new Date(last + 'T00:00:00'), today) / 30.44);
       rows.push({ l: { en: 'Last period', tr: 'Son adet' }, v: last });
@@ -336,4 +339,4 @@ function DoctorSummary({ lunara, onClose }) {
   ), document.body);
 }
 
-export { DoctorSummary, summaryText };
+export { DoctorSummary, summaryText, stageBlockFor };
