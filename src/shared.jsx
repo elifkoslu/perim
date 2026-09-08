@@ -443,15 +443,22 @@ function useLunara() {
       // TTC (gebe kalma) logs: 'YYYY-MM-DD' -> value
       ttc: { bbt: {}, lh: {}, intimacy: {}, ...(saved.ttc || {}) },
       // Pregnancy (gebelik): due date + logs
+      /* dueDate/weightKg burada sabit örnek değerlerdi ('2026-10-08', 68)
+         ve dueDate'i yazan hiçbir yer yok. Doktor özeti bunlardan gebelik
+         haftası, trimester ve tahmini doğum tarihi üretiyordu: gebelik
+         evresini seçen herkes hekimine kendi girmediği bir tarihi
+         götürüyordu. Alanlar artık boş başlıyor; özet satırları zaten
+         "if (pg.dueDate)" ile korumalı, veri yoksa kurulmuyorlar. */
       pregnancy: {
-        dueDate: '2026-10-08',   // ~24. hafta (bugün 2026-06-18)
-        weightKg: 68,
+        dueDate: null,
+        weightKg: null,
         kicks: {},               // 'YYYY-MM-DD' -> count
         ...(saved.pregnancy || {}),
       },
       // Postpartum (doğum sonrası): birth date + logs
+      /* birthDate de sabit örnekti ve yazanı yok — aynı kusur. */
       postpartum: {
-        birthDate: '2026-06-04', // ~2. hafta
+        birthDate: null,
         feeds: {},               // 'YYYY-MM-DD' -> count
         mood: {},                // 'YYYY-MM-DD' -> 1..5
         epds: [],                // EPDS results [{ id, date, score, q10, answers }]
