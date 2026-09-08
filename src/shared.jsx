@@ -475,6 +475,8 @@ function useLunara() {
       menopause: { ...(saved.menopause || {}) },
       // User-entered lab panels: [{ id, date, readings:[{key,name,nameTr,unit,value}] }]
       labPanels: saved.labPanels || [],
+      // Son yedek zamanı — yedek hatırlatması bundan hesaplanıyor
+      lastExportAt: saved.lastExportAt || null,
       // BHRT titration log: [{ id, date, med, from, to, reason, note }]
       titration: saved.titration || [],
     };
@@ -650,6 +652,7 @@ function useLunara() {
       if (im[dateKey]) delete im[dateKey]; else im[dateKey] = true;
       return { ...s, ttc: { ...s.ttc, intimacy: im } };
     }),
+    markExported: () => setState(s => ({ ...s, lastExportAt: new Date().toISOString() })),
     logWeight: (kg) => setState(s => ({ ...s, pregnancy: { ...s.pregnancy, weightKg: kg } })),
     addKick: (dateKey) => setState(s => ({ ...s, pregnancy: { ...s.pregnancy, kicks: { ...s.pregnancy.kicks, [dateKey]: (s.pregnancy.kicks[dateKey] || 0) + 1 } } })),
     resetKicks: (dateKey) => setState(s => {

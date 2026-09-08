@@ -265,7 +265,7 @@ function ProfileScreen({ lunara, api, onNav, onOpenPrivacy }) {
           <Card>
             <div className="eyebrow" style={{ marginBottom: 12 }}>{t('Data & account', 'Veri & hesap')}</div>
             <ActionRow icon={ICONS.vial} label={t('Export my data', 'Verilerimi dışa aktar')}
-              onClick={() => exportData(lunara)}/>
+              onClick={() => { exportData(lunara); if (api && api.markExported) api.markExported(); }}/>
             <ActionRow icon={ICONS.arrowDown} label={t('Import data file', 'Veri dosyasını içe aktar')}
               onClick={() => importRef.current && importRef.current.click()}/>
             <input ref={importRef} type="file" aria-label={t('Import data file', 'Veri dosyasını içe aktar')} accept="application/json,.json" onChange={pickImport} style={{ display: 'none' }}/>

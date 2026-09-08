@@ -6,6 +6,7 @@ import {
   hasCycleAnchor, phaseLabel, phaseOf, phaseRange, wrap,
 } from './screens';
 import { AyDurumu } from './moon';
+import { BackupReminder } from './backup-reminder';
 import { ReferenceCard } from './reference-card';
 import { Card, ICONS, Icon, TODAY_DATE, TODAY_KEY, getTodayKey, medTaken, todaysDoses } from './shared';
 
@@ -207,6 +208,10 @@ function PerimHome({ lunara, api, onNav }) {
           yapmalıyım" ekrandan çıkıyordu. Çapa yoksa hiç gösterilmiyor,
           çünkü hangi gündeyiz bilinmeden gösterecek bir şey yok. */}
       {capa && <ReferenceCard lunara={lunara} cycleDay={gun} katlanir acikBasla/>}
+
+      {/* Veri yalnız bu cihazda; kalıcılık istensin istenmesin tek gerçek
+          güvence dışa aktarılmış bir dosya. Korunacak veri yoksa çıkmaz. */}
+      <BackupReminder lunara={lunara} onNav={onNav}/>
     </div>
   );
 }
