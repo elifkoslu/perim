@@ -269,6 +269,11 @@ function ProfileScreen({ lunara, api, onNav, onOpenPrivacy }) {
             <div className="eyebrow" style={{ marginBottom: 12 }}>{t('Data & account', 'Veri & hesap')}</div>
             <ActionRow icon={ICONS.vial} label={t('Export my data', 'Verilerimi dışa aktar')}
               onClick={() => { exportData(lunara); if (api && api.markExported) api.markExported(); }}/>
+            {/* Kullanılan fontlar ve kütüphanelerin lisansları. OFL, metnin
+                dağıtıma eşlik etmesini şart koşuyor; dosyalar public/lisanslar
+                altında ve buradan ulaşılabiliyor. */}
+            <ActionRow icon={ICONS.book} label={t('Licences & credits', 'Lisanslar & künye')}
+              onClick={() => window.open('/lisanslar/KUNYE.txt', '_blank', 'noopener,noreferrer')}/>
             <ActionRow icon={ICONS.arrowDown} label={t('Import data file', 'Veri dosyasını içe aktar')}
               onClick={() => importRef.current && importRef.current.click()}/>
             <input ref={importRef} type="file" aria-label={t('Import data file', 'Veri dosyasını içe aktar')} accept="application/json,.json" onChange={pickImport} style={{ display: 'none' }}/>

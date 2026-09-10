@@ -1,0 +1,35 @@
+Perim — üçüncü taraf bileşenler ve lisansları
+
+Bu uygulama aşağıdaki üçüncü taraf bileşenleri içerir. Her birinin
+lisans metni bu klasörde, yanındaki dosya adıyla bulunur.
+
+
+YAZI TİPLERİ
+
+  Manrope
+    Telif: Copyright 2018 The Manrope Project Authors
+           https://github.com/sharanda/manrope
+    Lisans: SIL Open Font License 1.1 — OFL-Manrope.txt
+
+  Spectral
+    Telif: Copyright 2017 The Spectral Project Authors
+           https://github.com/productiontype/Spectral
+    Lisans: SIL Open Font License 1.1 — OFL-Spectral.txt
+
+  JetBrains Mono
+    Telif: Copyright 2020 The JetBrains Mono Project Authors
+           https://github.com/JetBrains/JetBrainsMono
+    Lisans: SIL Open Font License 1.1 — OFL-JetBrainsMono.txt
+
+
+YAZILIM BİLEŞENLERİ
+
+  React ve React DOM
+    Lisans: MIT — LICENSE-react.txt, LICENSE-react-dom.txt
+
+  pdf.js (pdfjs-dist)
+    Lisans: Apache License 2.0 — LICENSE-pdfjs-dist.txt
+    Not: Pakette ayrı bir NOTICE dosyası bulunmamaktadır.
+
+
+Perim'in kendi kaynak kodu bu lisansların kapsamında değildir.
