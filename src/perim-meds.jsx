@@ -35,11 +35,23 @@ function PerimMeds({ lunara, api, logDate, setLogDate }) {
   const [bolum, setBolum] = React.useState('bhrt');
   const [rejimAcik, setRejimAcik] = React.useState(false);
   const dk = logDate || getTodayKey();
+  /* Ekranın tarih değiştiricisi (DateNav) takviyeye, suya ve öğünlere
+     gidiyordu ama asıl ilaç dozları üç yerde bugüne sabitti: okuma
+     (medTaken), yazma (toggleMed) ve düzeltme (updateDose). Kullanıcı
+     tarihi geriye alıp doza dokununca kayıt bugüne yazılıyor, döngü günü
+     de bugünden hesaplandığı için seçilen günün planlı ilaçları yerine
+     bugünküler listeleniyordu. Hepsi artık seçilen güne bağlı. */
+  const dkDate = new Date(dk + 'T00:00:00');
+  const bugunMu = dk === getTodayKey();
   const L = cycleLenOf(lunara);
-  const gun = cycleDayFrom(lunara && lunara.periodStart, TODAY_DATE, L);
+  const gun = cycleDayFrom(lunara && lunara.periodStart, dkDate, L);
   const faz = phaseOf(gun, L);
-  const { meds } = todaysDoses(lunara);
-  const alinan = meds.filter(d => medTaken(lunara, d.id)).length;
+  const { meds } = todaysDoses(lunara, dkDate);
+  const alinan = meds.filter(d => medTaken(lunara, d.id, dk)).length;
+  /* Geçmiş bir güne işaret koyarken şu anki saat yanlış olur — ilacın
+     gerçekten alındığı saat o değildir. Bugünse şimdi, değilse ilacın
+     planlı saati. */
+  const dozSaati = (d) => (bugunMu ? nowHM() : (d.time || nowHM()));
   const rejimYok = !lunara.regimen || (lunara.regimen.meds || []).length === 0;
 
   return (
@@ -95,14 +107,14 @@ function PerimMeds({ lunara, api, logDate, setLogDate }) {
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column' }}>
                   {meds.map((d, i) => {
-                    const alindi = medTaken(lunara, d.id);
+                    const alindi = medTaken(lunara, d.id, dk);
                     return (
                       <React.Fragment key={d.id}>
                         <DozSatiri dose={d} taken={alindi} last={i === meds.length - 1 && !alindi}
-                          onToggle={() => api.toggleMed(TODAY_KEY, d.id, nowHM(), doseAmountOf(d), doseUnitOf(d))}/>
+                          onToggle={() => api.toggleMed(dk, d.id, dozSaati(d), doseAmountOf(d), doseUnitOf(d))}/>
                         {alindi && (
                           <TakenAmount med={d} entry={alindi} last={i === meds.length - 1}
-                            onChange={(patch) => api.updateDose(TODAY_KEY, d.id, patch)}/>
+                            onChange={(patch) => api.updateDose(dk, d.id, patch)}/>
                         )}
                       </React.Fragment>
                     );

@@ -7,6 +7,7 @@ import {
 } from './screens';
 import { AyDurumu } from './moon';
 import { BackupReminder } from './backup-reminder';
+import { DoseBackfill } from './dose-backfill';
 import { ReferenceCard } from './reference-card';
 import { Card, ICONS, Icon, TODAY_DATE, TODAY_KEY, getTodayKey, medTaken, todaysDoses } from './shared';
 
@@ -202,6 +203,10 @@ function PerimHome({ lunara, api, onNav }) {
             phaseAdi={capa && ph ? phaseLabel(ph) : ''}/>
         </div>
       </Card>
+
+      {/* Son günlerin dozları — İlaçlar'a gidip tarih değiştirmeden,
+          birkaç gün öncesini buradan işaretlemek için. Rejim yoksa çıkmaz. */}
+      <DoseBackfill lunara={lunara} api={api}/>
 
       {/* Normal döngü referansı — gün gün E2/P4 tablosuyla.
           Katlanır: eğriler ve 28 satırlık tablo açık dururken "bugün ne
