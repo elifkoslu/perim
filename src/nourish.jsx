@@ -240,8 +240,8 @@ const ESSENTIALS = [
   { id: 'ess-core', en: 'Plank', tr: 'Plank', spec: { en: '2–3 × 30 s', tr: '2–3 × 30 sn' }, cue: { en: 'Ribs down, breathe', tr: 'Kaburgalar aşağıda, nefes al' } },
 ];
 
-function StrengthFocus({ lunara, api }) {
-  const doneToday = (lunara.routineDone || {})[TODAY_KEY] || {};
+function StrengthFocus({ lunara, api, dk = TODAY_KEY }) {
+  const doneToday = (lunara.routineDone || {})[dk] || {};
   const doneCount = ESSENTIALS.filter(e => doneToday[e.id]).length;
   const [showMore, setShowMore] = React.useState(false);
 
@@ -273,7 +273,7 @@ function StrengthFocus({ lunara, api }) {
         {ESSENTIALS.map(e => {
           const done = !!doneToday[e.id];
           return (
-            <button key={e.id} onClick={() => api.toggleRoutineDone(TODAY_KEY, e.id)}
+            <button key={e.id} onClick={() => api.toggleRoutineDone(dk, e.id)}
               aria-label={done ? t('Mark not done', 'Yapılmadı işaretle') : t('Mark done', 'Yapıldı işaretle')}
               style={{ display: 'grid', gridTemplateColumns: 'auto 1fr auto', gap: 12, alignItems: 'center', padding: '11px 12px', width: '100%', textAlign: 'left', cursor: 'pointer',
                 borderRadius: 10, background: done ? 'var(--accent-soft)' : 'var(--bone)', boxShadow: done ? 'inset 0 0 0 1px var(--accent)' : 'none' }}>
@@ -299,7 +299,7 @@ function StrengthFocus({ lunara, api }) {
             return (
               <div key={e.id} style={{ display: 'grid', gridTemplateColumns: 'auto 1fr auto auto', gap: 10, alignItems: 'center', padding: '10px 12px', borderRadius: 10,
                 background: done ? 'var(--accent-soft)' : 'var(--card)', boxShadow: done ? 'inset 0 0 0 1px var(--accent)' : 'inset 0 0 0 1px var(--line-soft)' }}>
-                <button onClick={() => api.toggleRoutineDone(TODAY_KEY, e.id)} aria-label={done ? t('Mark not done', 'Yapılmadı işaretle') : t('Mark done', 'Yapıldı işaretle')}
+                <button onClick={() => api.toggleRoutineDone(dk, e.id)} aria-label={done ? t('Mark not done', 'Yapılmadı işaretle') : t('Mark done', 'Yapıldı işaretle')}
                   style={{ width: 26, height: 26, borderRadius: 8, flexShrink: 0, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
                     background: done ? 'var(--accent)' : 'transparent', boxShadow: done ? 'none' : 'inset 0 0 0 1.5px var(--line)' }}>
                   {done && <Icon d={ICONS.check} size={14} stroke="var(--ivory)" sw={2.4}/>}
@@ -382,7 +382,7 @@ function kegelStreak(kegelLog) {
   return n;
 }
 
-function KegelTrainer({ lunara, api }) {
+function KegelTrainer({ lunara, api, dk = TODAY_KEY }) {
   const [run, setRun] = React.useState(null);
   const [seq, setSeq] = React.useState([]);
   const [idx, setIdx] = React.useState(0);
@@ -392,7 +392,7 @@ function KegelTrainer({ lunara, api }) {
   React.useEffect(() => {
     if (!run) return;
     if (idx >= seq.length) {
-      if (api && api.logKegel) api.logKegel(TODAY_KEY, run.key);
+      if (api && api.logKegel) api.logKegel(dk, run.key);
       setSaved(run.key);
       setRun(null);
       const to = setTimeout(() => setSaved(''), 2600);
@@ -413,7 +413,7 @@ function KegelTrainer({ lunara, api }) {
   const stop = () => { setRun(null); setSeq([]); setIdx(0); };
 
   const kl = lunara.kegelLog || {};
-  const todayK = kl[TODAY_KEY] || {};
+  const todayK = kl[dk] || {};
   const todayTotal = (todayK.long || 0) + (todayK.quick || 0);
   const streak = kegelStreak(kl);
 
@@ -509,9 +509,9 @@ function jumpStreak(jumpLog) {
   return n;
 }
 
-function JumpTrainer({ lunara, api }) {
+function JumpTrainer({ lunara, api, dk = TODAY_KEY }) {
   const jl = lunara.jumpLog || {};
-  const count = jl[TODAY_KEY] || 0;
+  const count = jl[dk] || 0;
   const pct = Math.min(1, count / JUMP_GOAL);
   const done = count >= JUMP_GOAL;
   const streak = jumpStreak(jl);
@@ -557,19 +557,19 @@ function JumpTrainer({ lunara, api }) {
         <div style={{ flex: '1 1 240px', display: 'flex', flexDirection: 'column', gap: 10 }}>
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
             {[10, 25, 50].map(n => (
-              <button key={n} onClick={() => api.addJumps(TODAY_KEY, n)}
+              <button key={n} onClick={() => api.addJumps(dk, n)}
                 style={{ flex: '1 1 70px', padding: '13px 0', borderRadius: 12, cursor: 'pointer', background: 'var(--accent)', color: 'var(--ivory)', fontFamily: 'var(--sans)', fontSize: 14, fontWeight: 600 }}>
                 +{n}
               </button>
             ))}
           </div>
           <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-            <button onClick={() => api.addJumps(TODAY_KEY, -10)} disabled={count === 0}
+            <button onClick={() => api.addJumps(dk, -10)} disabled={count === 0}
               style={{ padding: '9px 14px', borderRadius: 10, cursor: count === 0 ? 'default' : 'pointer', background: 'transparent', boxShadow: 'inset 0 0 0 1px var(--line)', color: 'var(--ink-2)', fontSize: 13, fontWeight: 600, opacity: count === 0 ? 0.4 : 1 }}>
               −10
             </button>
             {count > 0 && (
-              <button onClick={() => api.resetJumps(TODAY_KEY)}
+              <button onClick={() => api.resetJumps(dk)}
                 style={{ padding: '9px 14px', borderRadius: 10, cursor: 'pointer', background: 'transparent', color: 'var(--muted)', fontSize: 12 }}>
                 {t('Reset', 'Sıfırla')}
               </button>
@@ -638,8 +638,15 @@ function GuidanceFootnote() {
 }
 
 /* ═══════════ MOVEMENT screen — strength, pelvic floor, bone + cycle-move ═══════════ */
-function MoveScreen({ lunara, api }) {
-  const today = TODAY_DATE;
+function MoveScreen({ lunara, api, logDate, setLogDate }) {
+  /* Ekran tarih almıyordu ve içindeki her kayıt TODAY_KEY'e sabitti:
+     rutin egzersizler, Kegel, zıplama. Dünkü antrenmanı bugün girmek
+     mümkün değildi. Belirtiler ve İlaçlar'daki gibi bir tarih değiştirici
+     var artık; faz rehberi de seçilen güne göre. Seriler (streak) bugüne
+     çıpalı kalıyor — onlar istatistik, kayıt değil. */
+  const dk = logDate || TODAY_KEY;
+  const today = new Date(dk + 'T00:00:00');
+  const isToday = dk === TODAY_KEY;
   const day = cycleDayFrom(lunara.periodStart, today, cycleLenOf(lunara));
   // Çapa yoksa "şimdi buradasın" işareti konmaz; içerik yine gezilebilir olsun
   // diye seçili faz menstrüelden başlar.
@@ -659,11 +666,19 @@ function MoveScreen({ lunara, api }) {
       <div className="eyebrow" style={{ marginBottom: 2 }}>
         {t('STRENGTH · PELVIC FLOOR · BONE', 'KUVVET · PELVİK TABAN · KEMİK')}
       </div>
+      {setLogDate && (
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 10 }}>
+          <DateNav date={dk} onChange={setLogDate}/>
+          <span style={{ fontSize: 12, color: 'var(--muted)', fontStyle: 'italic', fontFamily: 'var(--serif)' }}>
+            {isToday ? t('Log for another day too', 'Başka bir gün için de kaydedebilirsin') : t('Logging a past day', 'Geçmiş bir güne kaydediyorsun')}
+          </span>
+        </div>
+      )}
 
       {/* Perimenopause priorities — order: bone loading, pelvic floor, strength */}
-      <JumpTrainer lunara={lunara} api={api}/>
-      <KegelTrainer lunara={lunara} api={api}/>
-      <StrengthFocus lunara={lunara} api={api}/>
+      <JumpTrainer lunara={lunara} api={api} dk={dk}/>
+      <KegelTrainer lunara={lunara} api={api} dk={dk}/>
+      <StrengthFocus lunara={lunara} api={api} dk={dk}/>
 
       {/* Cycle-phase movement guidance (secondary — for the days you do cycle) */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, margin: '8px 0 -4px' }}>

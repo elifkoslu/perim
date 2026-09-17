@@ -142,7 +142,7 @@ export default function App() {
     switch (active) {
       case 'meds':      return <PerimMeds lunara={lunara} api={api} logDate={logDate} setLogDate={setLogDate} />;
       case 'symptoms':  return <SymptomsScreen lunara={lunara} api={api} logDate={logDate} setLogDate={setLogDate} />;
-      case 'move':      return <MoveScreen lunara={lunara} api={api} />;
+      case 'move':      return <MoveScreen lunara={lunara} api={api} logDate={logDate} setLogDate={setLogDate} />;
       case 'analytics': return <PerimAnalytics lunara={lunara} api={api} onNav={setActive} />;
       case 'profile':   return <ProfileScreen lunara={lunara} api={api} onNav={setActive} onOpenPrivacy={() => setPrivacyOpen(true)} />;
       default:          return <PerimHome lunara={lunara} api={api} onNav={setActive} />;
