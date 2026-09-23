@@ -8,6 +8,8 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
+      // Bildirime dokununca uygulamayı açan dinleyici (public/sw-bildirim.js)
+      workbox: { importScripts: ['sw-bildirim.js'] },
       includeAssets: [
         'apple-touch-icon.png', 'icon-192.png', 'icon-512.png', 'og.png',
         // Self-host edilmiş fontlar da ön-belleğe girmeli; yoksa çevrimdışı

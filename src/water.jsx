@@ -1,6 +1,7 @@
 import React from 'react';
 import { t, useLang } from './i18n';
 import { Card, DateNav, ICONS, Icon, TODAY_KEY, nowHM } from './shared';
+import { exportWaterIcs } from './calendar-export';
 
 /* water.jsx — günlük su takibi ve altı hatırlatma.
 
@@ -62,6 +63,7 @@ function WaterCard({ lunara, api, dateKey, setDateKey }) {
   const ayar = waterSettings(lunara);
   const gun = waterDay(lunara, dk);
   const [ayarAcik, setAyarAcik] = React.useState(false);
+  const [aktarDurum, setAktarDurum] = React.useState(null);
   const [miktar, setMiktar] = React.useState('');
 
   const hedefMl = ayar.goal * ayar.servingMl;
@@ -201,9 +203,28 @@ function WaterCard({ lunara, api, dateKey, setDateKey }) {
             ))}
           </div>
           <p style={{ fontSize: 11.5, color: 'var(--muted-2)', lineHeight: 1.55, margin: '12px 0 0' }}>
-            {t('Reminders fire while Perim is open. To be reminded when the app is closed, export these times to your phone’s calendar from the doses screen.',
-               'Hatırlatmalar Perim açıkken çalar. Uygulama kapalıyken de hatırlatılmak için bu saatleri Dozlar ekranından telefonunun takvimine aktar.')}
+            {t('Reminders come while Perim is open. To be reminded when the app is closed, add these times to your phone’s calendar.',
+               'Hatırlatmalar Perim açıkken gelir. Uygulama kapalıyken de hatırlatılmak için bu saatleri telefonunun takvimine ekle.')}
           </p>
+          {/* Eskiden "Dozlar ekranından aktar" diyordu; menarş ve diğer bazı
+              evrelerin menüsünde Dozlar yok. Düğme artık burada. */}
+          <button onClick={async () => {
+              const r = await exportWaterIcs(ayar.times);
+              setAktarDurum(r ? r.yol : 'hata');
+            }}
+            style={{ marginTop: 10, padding: '8px 14px', borderRadius: 999, cursor: 'pointer',
+              border: '1px solid var(--line)', background: 'var(--card)', color: 'var(--ink)',
+              fontFamily: 'var(--sans)', fontSize: 12.5, fontWeight: 600 }}>
+            {t('Add to my calendar', 'Takvimime ekle')}
+          </button>
+          {aktarDurum && (
+            <p style={{ fontSize: 11.5, color: 'var(--muted)', margin: '8px 0 0', lineHeight: 1.5 }}>
+              {aktarDurum === 'share' ? t('Pick your calendar app to add the reminders.', 'Hatırlatmaları eklemek için takvim uygulamanı seç.')
+                : aktarDurum === 'indir' ? t('A calendar file was downloaded — open it to add the reminders.', 'Bir takvim dosyası indirildi — hatırlatmaları eklemek için onu aç.')
+                : aktarDurum === 'iptal' ? t('Cancelled.', 'Vazgeçildi.')
+                : t('Could not create the calendar file.', 'Takvim dosyası oluşturulamadı.')}
+            </p>
+          )}
         </div>
       )}
     </Card>

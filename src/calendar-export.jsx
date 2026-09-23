@@ -104,8 +104,12 @@ function waterEvents(times, stamp, vevent, t) {
 }
 
 function buildIcs(regimen, waterTimes) {
-  const L = regimen.cycleLength;
-  const map = timeMap(regimen);
+  /* regimen null olabilir: ilaç planı olmayan bir kullanıcı (menarş, gebelik
+     planlama…) yalnızca su saatlerini aktarıyor. Eskiden ilk satır
+     regimen.cycleLength okuyordu ve bu çağrı try bloğunun dışındaydı. */
+  const reg = regimen || { cycleLength: 28, meds: [] };
+  const L = reg.cycleLength;
+  const map = timeMap(reg);
   if (!map.size && !(waterTimes && waterTimes.length)) return null;
 
   const stamp = utcStamp(new Date());
@@ -191,7 +195,21 @@ async function exportRegimenIcs(lunara, waterTimes) {
   if ((!regimen || !regimen.meds || !regimen.meds.length) && !(waterTimes && waterTimes.length)) return null;
   const built = buildIcs(regimen, waterTimes);
   if (!built) return null;
+  return paylasVeyaIndir(built);
+}
 
+/* Yalnızca su hatırlatmaları. Su kartından çağrılıyor: dışa aktarma
+   eskiden yalnız Dozlar ekranındaydı ve menarş, gebelik planlama, gebelik,
+   doğum sonrası evrelerinin menüsünde Dozlar yok — bu evrelerde
+   uygulama kapalıyken çalışan hiçbir hatırlatma yolu kalmıyordu. */
+async function exportWaterIcs(waterTimes) {
+  if (!waterTimes || !waterTimes.length) return null;
+  const built = buildIcs(null, waterTimes);
+  if (!built) return null;
+  return paylasVeyaIndir(built);
+}
+
+async function paylasVeyaIndir(built) {
   try {
     if (typeof File === 'function' && navigator.canShare) {
       const file = new File([built.ics], DOSYA_ADI, { type: 'text/calendar' });
@@ -210,4 +228,4 @@ async function exportRegimenIcs(lunara, waterTimes) {
   } catch (e) { return null; }
 }
 
-export { exportRegimenIcs, buildIcs, CYCLE_COUNT };
+export { exportRegimenIcs, exportWaterIcs, buildIcs, CYCLE_COUNT };

@@ -3,6 +3,7 @@ import { I18N, t, useLang } from './i18n';
 import { Btn, ScreenHead, wrap } from './screens';
 import { Card, ICONS, Icon, LS_KEY, SilBtn } from './shared';
 import { STAGES, stageName } from './stages';
+import { bildirimGoster } from './notify';
 
 /* profile.jsx — Perim profil & ayarlar ekranı */
 /* eslint-disable */
@@ -358,12 +359,12 @@ function NotificationSettings({ lunara, api }) {
       setPerm(r);
       if (r === 'granted') {
         api.updateProfile({ reminders: true });
-        new Notification('Perim', { body: lang === 'tr' ? 'Hatırlatıcılar açıldı 🌙' : 'Reminders are on 🌙', icon: '/icon-192.png' });
+        bildirimGoster('Perim', { body: lang === 'tr' ? 'Hatırlatıcılar açıldı 🌙' : 'Reminders are on 🌙', icon: '/icon-192.png' });
       }
     } catch (e) {}
   };
   const test = () => {
-    if (granted) try { new Notification('Perim', { body: lang === 'tr' ? 'Bu bir test bildirimidir 🔔' : 'This is a test notification 🔔', icon: '/icon-192.png' }); } catch (e) {}
+    if (granted) try { bildirimGoster('Perim', { body: lang === 'tr' ? 'Bu bir test bildirimidir 🔔' : 'This is a test notification 🔔', icon: '/icon-192.png' }); } catch (e) {}
   };
 
   const status = !supported
@@ -531,7 +532,7 @@ async function toggleNotifications(key, value, api) {
         return;
       }
       // izin verildi — örnek bir doğrulama bildirimi gönder
-      new Notification('Perim', {
+      bildirimGoster('Perim', {
         body: I18N.lang === 'tr' ? 'Hatırlatıcılar açıldı 🌙' : 'Reminders are on 🌙',
         icon: 'icon-192.png',
       });
