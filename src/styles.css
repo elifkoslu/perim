@@ -170,7 +170,18 @@ button {
   from { opacity: 0; transform: translateY(8px); }
   to { opacity: 1; transform: translateY(0); }
 }
-.fade-up { animation: fadeUp 360ms cubic-bezier(.2,.7,.2,1) both; }
+/* Dolgu kipi bilerek "backwards", "both" değil. .fade-up her ekranı sarıyor;
+   "both" ile son kare kalıcı oluyordu ve son karedeki transform — tarayıcı
+   onu birim matris olarak tutsa bile — içindeki position:fixed öğeler için
+   yeni bir referans kutusu açıyordu. Açılır pencereler ekrana değil
+   kaydırılan içeriğe göre konumlanıyordu: telefonda aşağı kaydırılmışken
+   bilgi kartı açılınca başlığı ve kapatma düğmesi ekranın yukarısında
+   kalıyor, kart boş görünüyordu; PDF aktarmanın "kaydet" düğmesi de aynı
+   nedenle kaybolabiliyordu. Son kareye "transform: none" yazmak yetmedi —
+   Chrome none'u interpolasyon için birim matrise çeviriyor ve onu tutuyor.
+   "backwards" başlangıç karesini korur; animasyon bitince öğe kendi doğal
+   stiline (transform yok, opaklık 1) döner, ki son kare zaten buydu. */
+.fade-up { animation: fadeUp 360ms cubic-bezier(.2,.7,.2,1) backwards; }
 
 @keyframes pulseSoft {
   0%, 100% { opacity: 0.9; }
@@ -192,7 +203,8 @@ button {
 :focus:not(:focus-visible) { outline: none; }
 
 /* Hareket duyarlılığı (vestibüler rahatsızlık, migren) olanlar için:
-   animasyonu kaldır ama .fade-up'ın 'both' dolgusuna bağlı son durumu koru. */
+   animasyonu kaldır. .fade-up "backwards" dolgulu; animasyon bitince öğe
+   zaten doğal (görünür, kaymamış) durumuna döner. */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation-duration: 0.01ms !important;
