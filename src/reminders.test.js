@@ -78,3 +78,16 @@ describe('sayfa içi new Notification() geri gelmesin', () => {
     expect(bulunan).toEqual([]);
   });
 });
+
+/* Lunara'da su hatırlatması BRAND adını kullanıyordu ama sabit hiç
+   tanımlanmamıştı: ReferenceError try/catch'te yutuluyor, hatırlatma
+   hiçbir cihazda gösterilmiyordu. Bildirim başlığı olarak kullanılan
+   ad tanımlı olmalı. */
+describe('bildirim başlığı tanımlı', () => {
+  it('App.jsx BRAND kullanıyorsa tanımlıyor', () => {
+    const app = fs.readFileSync(path.join(SRC, 'App.jsx'), 'utf8');
+    if (/bildirimGoster\(BRAND\b/.test(app)) {
+      expect(app).toMatch(/\bconst BRAND\s*=\s*'[^']+'/);
+    }
+  });
+});
