@@ -6,7 +6,7 @@ import { RegimenEditor } from './regimen';
 import { DoctorSummary } from './doctor-summary';
 import { PHASE_TINT } from './phase-colors';
 import { libraryFor, symptomsFor } from './screen-content';
-import { Card, DateNav, ICONS, Icon, LABS, Logo, RangeBar, SilBtn, SYMPTOMS, Sparkline, SymptomTrack, TODAY_DATE, TODAY_KEY, activeMeds, getTodayKey, labCurrent, labHistory, labReadings, medTaken, nowHM, regimenDay, todaysDoses, whenLabel } from './shared';
+import { Card, DateNav, ICONS, Icon, LABS, Logo, RangeBar, SilBtn, SYMPTOMS, Sparkline, SymptomTrack, TODAY_DATE, TODAY_KEY, activeMeds, getTodayKey, labCurrent, labHistory, labReadings, medTaken, nowHM, regimenDay, todaysDoses, whenLabel, KANAMA_ANAHTARLARI, gunlukLog } from './shared';
 import { STAGES } from './stages';
 import { SupplementsPanel } from './supplements';
 import { ReferenceCard } from './reference-card';
@@ -696,7 +696,9 @@ function SymptomHeatmap({ symptomLog, syms, selected, onPick }) {
 function SymptomsScreen({ lunara, api, logDate, setLogDate }) {
   const dk = logDate || TODAY_KEY;
   const isToday = dk === TODAY_KEY;
-  const dayLog = lunara.symptomLog[dk] || {};
+  /* Kanama tek kaynaktan (periodDays) — bkz. shared.jsx gunlukLog */
+  const gunluk = gunlukLog(lunara);
+  const dayLog = gunluk[dk] || {};
   const syms = symptomsFor(lunara.stage);
   const logged = syms.filter(s => dayLog[s.key] != null).length;
   const [note, setNote] = React.useState('');
@@ -731,7 +733,7 @@ function SymptomsScreen({ lunara, api, logDate, setLogDate }) {
                     {[0,1,2,3].map(v => {
                       const on = val === v;
                       return (
-                        <button key={v} onClick={() => api.logSymptom(dk, s.key, v)}
+                        <button key={v} onClick={() => (KANAMA_ANAHTARLARI.includes(s.key) ? api.setFlow(dk, v) : api.logSymptom(dk, s.key, v))}
                           style={{
                             flex: 1, height: 30, borderRadius: 8,
                             background: on ? 'var(--accent)' : 'var(--bone)',
@@ -750,7 +752,7 @@ function SymptomsScreen({ lunara, api, logDate, setLogDate }) {
         </Card>
         {/* History + note */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-          <SymptomHeatmap symptomLog={lunara.symptomLog} syms={syms} selected={dk} onPick={setLogDate} />
+          <SymptomHeatmap symptomLog={gunluk} syms={syms} selected={dk} onPick={setLogDate} />
           <Card>
             <div className="eyebrow" style={{ marginBottom: 12 }}>{t('Add a note', 'Not ekle')}</div>
             <textarea value={note} onChange={e => setNote(e.target.value)}

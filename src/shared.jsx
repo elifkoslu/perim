@@ -374,9 +374,76 @@ function sonKanamaBasi(gunler) {
   }
 }
 
+/* ── Kanama: tek kaynak ────────────────────────────────────────
+   Belirtilerdeki kanama (düzenli döngüde "Akış" = flow, perimenopozda
+   "Kanama" = cycle) eskiden symptomLog'a yazılıyordu; regl başlangıcı
+   (periodStart) ve takvimdeki regl günleri ise periodDays'ten geliyordu.
+   Belirtilerden girilen kanama çapayı güncellemiyor, takvime ancak kısmen
+   yansıyordu. Artık bu iki anahtarın değeri yalnız periodDays'te (0–3
+   yoğunluk; true = yoğunluksuz işaret, "Orta" sayılır — bledOn kuralı).
+
+   Doğum sonrası kanama ("bleeding") BİLEREK dışarıda: lohusa kanaması
+   regl değil. periodDays'e yazılsa döngü başlangıcı ondan hesaplanırdı. */
+const KANAMA_ANAHTARLARI = ['flow', 'cycle'];
+
+function kanamaDegeri(v) {
+  if (v === true) return 2;
+  return typeof v === 'number' ? v : null;
+}
+
+// Belirti ekranlarının gördüğü günlük kayıt: symptomLog + periodDays'ten kanama.
+function gunlukLog(lunara) {
+  const out = { ...((lunara && lunara.symptomLog) || {}) };
+  for (const [gun, v] of Object.entries((lunara && lunara.periodDays) || {})) {
+    const d = kanamaDegeri(v);
+    if (d == null) continue;
+    const ek = {}; for (const k of KANAMA_ANAHTARLARI) ek[k] = d;
+    out[gun] = { ...(out[gun] || {}), ...ek };
+  }
+  return out;
+}
+
+/* Belirtilerden kanama yazmak. 0 ("Yok") açık kayıt olarak kalıyor; yanlış-
+   değerli olduğu için kanama sayılmıyor. Çapa kuralı takvime dokunmakla
+   (togglePeriodDay) aynı. */
+function kanamaAyikla(kayit) {
+  const kalan = { ...kayit };
+  for (const k of KANAMA_ANAHTARLARI) delete kalan[k];
+  return kalan;
+}
+/* symptomLog'da bu anahtarlar hiç kalmıyor: bledOn periodDays'te işaret yoksa
+   onlara geri düşüyor, eski bir "Kanama: Çok" sonradan girilen "Yok"u ezerdi. */
+function akisYaz(s, gun, deger) {
+  const gunler = { ...(s.periodDays || {}), [gun]: deger };
+  const log = { ...(s.symptomLog || {}) };
+  if (log[gun]) log[gun] = kanamaAyikla(log[gun]);
+  return { ...s, periodDays: gunler, symptomLog: log, periodStart: sonKanamaBasi(gunler) || s.periodStart };
+}
+
+/* Eski symptomLog kanama kayıtlarını açılışta bir kez periodDays'e taşı.
+   Takvimde o gün zaten bir işaret varsa ona dokunulmuyor. Çapa, takvime
+   dokunmakla aynı kurala göre yeniden hesaplanıyor: belirtilerden girilmiş
+   kanama takvimdeki son başlangıçtan yeniyse çapa ona kayar. */
+function akisTasi(saved) {
+  if (!saved || !saved.symptomLog) return saved;
+  const gunler = { ...(saved.periodDays || {}) };
+  const log = {};
+  let degisti = false;
+  for (const [gun, kayit] of Object.entries(saved.symptomLog)) {
+    if (!kayit || typeof kayit !== 'object') { log[gun] = kayit; continue; }
+    const k = KANAMA_ANAHTARLARI.find(a => a in kayit);
+    if (k === undefined) { log[gun] = kayit; continue; }
+    degisti = true;
+    if (!(gun in gunler) && typeof kayit[k] === 'number') gunler[gun] = kayit[k];
+    log[gun] = kanamaAyikla(kayit);
+  }
+  if (!degisti) return saved;
+  return { ...saved, periodDays: gunler, symptomLog: log, periodStart: sonKanamaBasi(gunler) || saved.periodStart || null };
+}
+
 function useLunara() {
   const [state, setState] = React.useState(() => {
-    const saved = loadState();
+    const saved = akisTasi(loadState());
     return {
       // dose id -> ISO time taken (or false) — legacy, regimen/doseLog is canonical
       doses: saved.doses || {},
@@ -497,6 +564,7 @@ function useLunara() {
     // Takvimde bir günü kanama olarak işaretler/kaldırır. Döngü günü hesabının
     // çapası, işaretli günlerin en son kesintisiz serisinin ilk günüdür: kullanıcı
     // geçmişi düzelttiğinde döngü günü kendiliğinden düzelsin diye türetiliyor.
+    setFlow: (dateKey, deger) => setState(s => akisYaz(s, dateKey, deger)),
     togglePeriodDay: (dateKey) => setState(s => {
       const gunler = { ...(s.periodDays || {}) };
       if (gunler[dateKey]) delete gunler[dateKey]; else gunler[dateKey] = true;
@@ -1077,4 +1145,4 @@ function SymptomTrack({ series, color = 'var(--accent)', dotSize = 6, gap = 3 })
   );
 }
 
-export { sonKanamaBasi, PATIENT, DOSES_TODAY, SYMPTOMS, LABS, PROVIDER, PROGRAM, Icon, ICONS, navItemsFor, SideRail, Logo, LS_KEY, loadState, useLunara, nowHM, WHEN_TR, whenLabel, getTodayKey, TODAY_KEY, TODAY_DATE, regimenDay, activeMeds, medSchedule, medSlotFor, slotCovers, todaysDoses, medTaken, doseEntry, ProgramBar, TopBar, StorageBanner, DateNav, pillBtn, Card, SilBtn, Sparkline, RangeBar, SymptomTrack, labReadings, labHistory, labCurrent };
+export { sonKanamaBasi, KANAMA_ANAHTARLARI, kanamaDegeri, gunlukLog, akisYaz, akisTasi, PATIENT, DOSES_TODAY, SYMPTOMS, LABS, PROVIDER, PROGRAM, Icon, ICONS, navItemsFor, SideRail, Logo, LS_KEY, loadState, useLunara, nowHM, WHEN_TR, whenLabel, getTodayKey, TODAY_KEY, TODAY_DATE, regimenDay, activeMeds, medSchedule, medSlotFor, slotCovers, todaysDoses, medTaken, doseEntry, ProgramBar, TopBar, StorageBanner, DateNav, pillBtn, Card, SilBtn, Sparkline, RangeBar, SymptomTrack, labReadings, labHistory, labCurrent };

@@ -1,7 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import { I18N, t } from './i18n';
-import { LABS, TODAY_DATE, activeMeds, getTodayKey, medSchedule, regimenDay } from './shared';
+import { LABS, TODAY_DATE, activeMeds, getTodayKey, medSchedule, regimenDay, gunlukLog } from './shared';
 import { symptomsFor } from './screen-content';
 
 /* doctor-summary.jsx — a one-page summary the user can print / save as PDF
@@ -41,7 +41,8 @@ function buildSummary(lunara) {
   const syms = symptomsFor(lunara.stage);
   const keys = [];
   for (let i = 29; i >= 0; i--) { const d = new Date(TODAY_DATE); d.setDate(d.getDate() - i); keys.push(dateKey(d)); }
-  const symLog = lunara.symptomLog || {};
+  // Kanama tek kaynaktan (periodDays) — belirtilerden girilen kanama da sayılsın
+  const symLog = gunlukLog(lunara);
   const symptomSummary = syms.map(s => {
     const vals = keys.map(k => symLog[k] && symLog[k][s.key]).filter(v => v != null);
     if (!vals.length) return null;

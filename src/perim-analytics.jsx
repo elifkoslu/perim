@@ -7,7 +7,7 @@ import {
   phaseLabel, phaseOf, rateLabel, wrap,
 } from './screens';
 import {
-  Card, ICONS, Icon, TODAY_DATE, activeMeds, regimenDay,
+  Card, ICONS, Icon, TODAY_DATE, activeMeds, regimenDay, gunlukLog,
 } from './shared';
 
 /* perim-analytics.jsx — "Analizler": biriken kaydın ne söylediği.
@@ -63,8 +63,9 @@ function uyumHesapla(lunara) {
    NULL'LAR KORUNUYOR: "o gün kayıt yok" ile "o gün yok olarak kaydedildi"
    aynı şey değil. İkisini de 0'a çevirmek grafiği yalancı yapardı. */
 function belirtiSerisi(lunara, key) {
+  const log = gunlukLog(lunara);  // kanama periodDays'ten
   const seri = sonGunler(PENCERE).map(g => {
-    const v = ((lunara.symptomLog || {})[g.key] || {})[key];
+    const v = (log[g.key] || {})[key];
     return v == null ? null : v;
   });
   const dolu = seri.filter(v => v != null);
