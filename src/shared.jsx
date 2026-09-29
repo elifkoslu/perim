@@ -814,7 +814,12 @@ const TODAY_DATE = new Date(TODAY_KEY + 'T00:00:00');
 function regimenDay(regimen, today = TODAY_DATE) {
   const L = (regimen && regimen.cycleLength) || 28;
   const anchor = new Date(((regimen && regimen.anchor) || getTodayKey()) + 'T00:00:00');
-  const d = Math.floor((today - anchor) / 86400000);
+  /* Takvim günü farkı. Saat taşıyan tarih (hatırlatıcının `now`u) önce o
+     günün gece yarısına indiriliyor; sonra round — floor değil: yaz saatine
+     geçilen gece 23 saat sürer ve floor o günden sonraki her tarihi bir gün
+     geri atardı (ileri tarih önizlemesi bu geçişi aşabiliyor). */
+  const gun = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+  const d = Math.round((gun - anchor) / 86400000);
   return ((d % L) + L) % L + 1;
 }
 // Meds active on a given cycle day (supports wrap-around ranges)
@@ -863,27 +868,30 @@ function todaysDoses(lunara, when) {
   return { meds: activeMeds(lunara.regimen, day), day };
 }
 
-// Date navigator — lets a screen log to any past day (never the future).
+// Date navigator — lets a screen log to any past day. Gelecek yalnızca
+// maxDate verilirse açılır (İlaçlar'daki doz önizlemesi); varsayılan bugün.
 const dateNavBtn = { width: 28, height: 28, borderRadius: 8, background: 'var(--bone)', color: 'var(--ink-2)', fontSize: 16, lineHeight: 1, boxShadow: 'inset 0 0 0 1px var(--line-soft)' };
-function DateNav({ date, onChange }) {
+function DateNav({ date, onChange, maxDate }) {
   const today = getTodayKey();
+  const max = maxDate && maxDate > today ? maxDate : today;
   const isToday = date === today;
+  const atMax = date >= max;
   const locale = I18N.lang === 'tr' ? 'tr' : 'en';
   const label = isToday
     ? t('Today', 'Bugün')
     : new Date(date + 'T00:00:00').toLocaleDateString(locale, { weekday: 'short', day: 'numeric', month: 'long' });
   const keyOf = dt => dt.getFullYear() + '-' + String(dt.getMonth() + 1).padStart(2, '0') + '-' + String(dt.getDate()).padStart(2, '0');
-  const shift = n => { const nd = new Date(date + 'T00:00:00'); nd.setDate(nd.getDate() + n); const k = keyOf(nd); if (k <= today) onChange(k); };
+  const shift = n => { const nd = new Date(date + 'T00:00:00'); nd.setDate(nd.getDate() + n); const k = keyOf(nd); if (k <= max) onChange(k); };
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
       <button onClick={() => shift(-1)} style={{ ...dateNavBtn, cursor: 'pointer' }} aria-label="Previous day">‹</button>
       <div style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: 7, padding: '8px 14px', borderRadius: 999, background: 'var(--card)', boxShadow: 'inset 0 0 0 1px var(--line)' }}>
         <Icon d={ICONS.clock} size={13} stroke="var(--muted)"/>
         <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--ink)', whiteSpace: 'nowrap' }}>{label}</span>
-        <input type="date" max={today} value={date} onChange={e => e.target.value && onChange(e.target.value)}
+        <input type="date" max={max} value={date} onChange={e => e.target.value && e.target.value <= max && onChange(e.target.value)}
           style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', opacity: 0, cursor: 'pointer' }} aria-label="Pick a date"/>
       </div>
-      <button onClick={() => shift(1)} disabled={isToday} style={{ ...dateNavBtn, opacity: isToday ? 0.35 : 1, cursor: isToday ? 'default' : 'pointer' }} aria-label="Next day">›</button>
+      <button onClick={() => shift(1)} disabled={atMax} style={{ ...dateNavBtn, opacity: atMax ? 0.35 : 1, cursor: atMax ? 'default' : 'pointer' }} aria-label="Next day">›</button>
       {!isToday && <button onClick={() => onChange(today)} style={{ fontSize: 12, color: 'var(--accent)', fontWeight: 600, cursor: 'pointer', paddingLeft: 2 }}>{t('Today', 'Bugün')}</button>}
     </div>
   );
