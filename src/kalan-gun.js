@@ -1,4 +1,4 @@
-import { activeMeds, medSlotFor, regimenDay } from './shared';
+import { medSlotFor, regimenDay } from './shared';
 
 /* kalan-gun.js — "Bu ilacı bu döngüde daha kaç gün kullanacağım?"
 
@@ -82,21 +82,36 @@ function kalanGunler(regimen, bugun) {
     .filter(x => x.ileri);
 }
 
-/* İlaç arası: rejim döngüsünde hiçbir ilacın planlı olmadığı günler.
-   Döngüsel BHRT'de kanama çoğu zaman bu arada gelir (kullanıcı: "ara
-   verdiğimde bir iki gün sonra, bazen hiç gelmiyor"), bu yüzden takvim
-   beklenen kanamayı bir rejim varsa buradan gösteriyor. Rejimde hiç ara
-   yoksa (sürekli kullanım) ya da hiç ilaç yoksa ara da yok. */
+/* Östrojen arası: rejim döngüsünde hiçbir östrojenin planlı olmadığı günler.
+   Döngüsel BHRT'de kanama çoğu zaman östrojen kesildikten bir iki gün sonra
+   gelir (bazen hiç gelmez); takvim beklenen kanamayı bir östrojen arası
+   varsa buradan gösteriyor. Aynı günlerde başka ilaçlar (DHEA, takviye…)
+   sürse de ara sayılıyor — kullanıcının tanımı: "yalnızca östrojenin
+   kesildiği günler". Programda östrojen yoksa ya da sürekli kullanılıyorsa
+   ara yok, takvim son regl tarihine göre çiziyor.
+
+   Östrojen olduğu adından anlaşılıyor; ilaç kaydındaki `ostrojen` alanı
+   (programda elle işaretlenen kutu) her zaman önce gelir — adından
+   anlaşılmayan birleşik ilaçlar ya da yanlış eşleşme için. */
+const OSTROJEN_ADI = /(estr|östr|ostroj|divigel|sandrena|climara|progynova|lenzetto)/i;
+function ostrojenMi(med) {
+  if (!med) return false;
+  if (typeof med.ostrojen === 'boolean') return med.ostrojen;
+  return OSTROJEN_ADI.test((med.name || '') + ' ' + (med.nameTr || ''));
+}
+function ostrojenGunu(regimen, gun) {
+  return regimen.meds.some(m => ostrojenMi(m) && medSlotFor(m, gun));
+}
 function rejimdeAraVar(regimen) {
-  if (!regimen || !Array.isArray(regimen.meds) || !regimen.meds.length) return false;
+  if (!regimen || !Array.isArray(regimen.meds) || !regimen.meds.some(ostrojenMi)) return false;
   const L = regimen.cycleLength || 28;
   let bos = 0;
-  for (let g = 1; g <= L; g++) if (activeMeds(regimen, g).length === 0) bos++;
+  for (let g = 1; g <= L; g++) if (!ostrojenGunu(regimen, g)) bos++;
   return bos > 0 && bos < L;
 }
 function rejimAraGunu(regimen, tarih) {
   if (!rejimdeAraVar(regimen)) return false;
-  return activeMeds(regimen, regimenDay(regimen, tarih)).length === 0;
+  return !ostrojenGunu(regimen, regimenDay(regimen, tarih));
 }
 
-export { ilacIleri, kalanGunler, gunEkle, tarihAnahtari, rejimdeAraVar, rejimAraGunu };
+export { ilacIleri, kalanGunler, gunEkle, tarihAnahtari, ostrojenMi, rejimdeAraVar, rejimAraGunu };

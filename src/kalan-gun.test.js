@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import { ilacIleri, kalanGunler, rejimAraGunu, rejimdeAraVar, tarihAnahtari } from './kalan-gun.js';
+import { ilacIleri, kalanGunler, ostrojenMi, rejimAraGunu, rejimdeAraVar, tarihAnahtari } from './kalan-gun.js';
 import { regimenDay } from './shared.jsx';
 
 /* "Bu ilacı bu döngüde daha kaç gün kullanacağım?" — yalnızca programdan
@@ -127,23 +127,42 @@ describe('son regl bilinmiyorken', () => {
   });
 });
 
-describe('ilaç arası', () => {
-  // 28 günlük rejim, 1 Eylül 1. gün; ilaçlar 1–24, ara 25–28
-  const r = rejim([{ id: 'e', name: 'E', dose: '1', startDay: 1, endDay: 24 },
-                   { id: 'p', name: 'P', dose: '1', startDay: 13, endDay: 24 }]);
-  it('hiç ilaç planlanmayan günler ara', () => {
+describe('östrojen arası', () => {
+  // 28 günlük rejim, 1 Eylül 1. gün; estradiol 1–24, progesteron 13–24, DHEA her gün
+  const e = { id: 'e', name: 'Estradiol', dose: '1', startDay: 1, endDay: 24 };
+  const p = { id: 'p', name: 'Progesteron', dose: '1', startDay: 13, endDay: 24 };
+  const dhea = { id: 'd', name: 'DHEA', dose: '10 mg', startDay: 1, endDay: 28 };
+  const r = rejim([e, p, dhea]);
+
+  it('östrojenin planlı olmadığı günler ara — başka ilaçlar sürse de', () => {
     expect(rejimdeAraVar(r)).toBe(true);
     expect(rejimAraGunu(r, gun('2026-09-24'))).toBe(false);
-    expect(rejimAraGunu(r, gun('2026-09-25'))).toBe(true);
+    expect(rejimAraGunu(r, gun('2026-09-25'))).toBe(true);    // DHEA sürüyor, yine ara
     expect(rejimAraGunu(r, gun('2026-09-28'))).toBe(true);
     expect(rejimAraGunu(r, gun('2026-09-29'))).toBe(false);   // yeni rejim döngüsü
   });
-  it('sürekli kullanımda ara yok', () => {
-    expect(rejimdeAraVar(rejim([estradiol]))).toBe(false);
+
+  it('progesteronun kesildiği ama östrojenin sürdüğü günler ara değil', () => {
+    const r2 = rejim([{ ...e, startDay: 1, endDay: 28 }, p]);
+    expect(rejimdeAraVar(r2)).toBe(false);
   });
-  it('ilaç yoksa ara yok', () => {
+
+  it('östrojen yoksa ara yok', () => {
+    expect(rejimdeAraVar(rejim([p, dhea]))).toBe(false);
     expect(rejimdeAraVar(rejim([]))).toBe(false);
     expect(rejimdeAraVar(null)).toBe(false);
+  });
+
+  it('adından tanıma', () => {
+    for (const ad of ['Estradiol', 'estradiol valerat', 'Östrojen jel', 'ostrojen', 'Estrogel', 'Oestrogel', 'Estriol krem', 'Divigel', 'Sandrena', 'Climara', 'Progynova', 'Lenzetto'])
+      expect(ostrojenMi({ name: ad })).toBe(true);
+    for (const ad of ['Progesteron', 'Progesterone', 'Utrogestan', 'Dydrogesterone', 'Norethisterone', 'Testosteron', 'DHEA'])
+      expect(ostrojenMi({ name: ad })).toBe(false);
+  });
+
+  it('elle işaret addan önce gelir', () => {
+    expect(ostrojenMi({ name: 'Femoston', ostrojen: true })).toBe(true);
+    expect(ostrojenMi({ name: 'Estradiol', ostrojen: false })).toBe(false);
   });
 });
 

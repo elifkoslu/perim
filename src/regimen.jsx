@@ -1,4 +1,5 @@
 import React from 'react';
+import { ostrojenMi } from './kalan-gun';
 import { t, useLang } from './i18n';
 import { Btn } from './screens';
 import { exportRegimenIcs, CYCLE_COUNT } from './calendar-export';
@@ -418,6 +419,17 @@ function MedEditRow({ med, max, api, color }) {
               })}
             </div>
           </div>
+          {/* Takvimdeki "östrojen arası" bu kutudan: işaretli ilaçların hiçbirinin
+              planlı olmadığı günler. Varsayılan ilacın adından (kalan-gun.js). */}
+          <label style={{ display: 'flex', alignItems: 'flex-start', gap: 9, fontSize: 12.5, color: 'var(--ink-2)', cursor: 'pointer', lineHeight: 1.45 }}>
+            <input type="checkbox" checked={ostrojenMi(med)} style={{ marginTop: 2, accentColor: 'var(--accent)' }}
+              onChange={e => api.updateMed(med.id, { ostrojen: e.target.checked })}/>
+            <span>
+              <b style={{ fontWeight: 600 }}>{t('Estrogen', 'Östrojen')}</b>
+              <span style={{ color: 'var(--muted)' }}> — {t('the days it pauses show on the calendar as the break when bleeding may come',
+                'kesildiği günler takvimde kanamanın gelebileceği ara olarak görünür')}</span>
+            </span>
+          </label>
           <DoseSchedule med={med} max={max} api={api}/>
         </div>
       )}
