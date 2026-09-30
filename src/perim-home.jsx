@@ -2,12 +2,13 @@ import React from 'react';
 import { t, useLang } from './i18n';
 import { MonthNav, WeekdayRow, useMonthView } from './month-grid';
 import {
-  PHASE_TINT, bleedExpected, bledOn, cycleDayFrom, cycleLenOf,
+  PHASE_TINT, bleedExpected, bledOn, cycleDayFrom, cycleLenOf, daysBetween, dongUzadi,
   hasCycleAnchor, phaseLabel, phaseOf, phaseRange, wrap,
 } from './screens';
 import { AyDurumu } from './moon';
 import { BackupReminder } from './backup-reminder';
 import { DoseBackfill } from './dose-backfill';
+import { rejimAraGunu, rejimdeAraVar } from './kalan-gun';
 import { ReferenceCard } from './reference-card';
 import { Card, ICONS, Icon, TODAY_DATE, TODAY_KEY, getTodayKey, medTaken, todaysDoses } from './shared';
 
@@ -48,6 +49,9 @@ function PerimHome({ lunara, api, onNav }) {
   const gun = cycleDayFrom(lunara && lunara.periodStart, TODAY_DATE, L);
   const ph = phaseOf(gun, L);
   const capa = hasCycleAnchor(lunara);
+  const uzadi = dongUzadi(gun, L);
+  const araVar = rejimdeAraVar(lunara && lunara.regimen);
+  const bugunAra = araVar && rejimAraGunu(lunara.regimen, TODAY_DATE);
   const { meds } = todaysDoses(lunara);
   const kalan = meds.filter(m => !medTaken(lunara, m.id)).length;
   const bugun = gunKaydi(lunara, TODAY_KEY);
@@ -63,7 +67,10 @@ function PerimHome({ lunara, api, onNav }) {
                 renklerinde de var. */}
             <div className="eyebrow">
               {capa && ph
-                ? t(`DAY ${gun} · ${phaseLabel(ph)} · ${L}-DAY`, `${gun}. GÜN · ${phaseLabel(ph)} · ${L} GÜNLÜK`)
+                ? (uzadi
+                    ? t(`DAY ${gun} · NEW PERIOD NOT LOGGED YET`, `${gun}. GÜN · YENİ REGL HENÜZ GELMEDİ`)
+                    : t(`DAY ${gun} · ${phaseLabel(ph)} · ${L}-DAY`, `${gun}. GÜN · ${phaseLabel(ph)} · ${L} GÜNLÜK`))
+                  + (bugunAra ? t(' · MEDICATION BREAK', ' · İLAÇ ARASI') : '')
                 : t('CYCLE NOT SET YET', 'DÖNGÜ HENÜZ BELİRLENMEDİ')}
             </div>
             <div style={{ fontSize: 11.5, color: 'var(--muted)', marginTop: 3 }}>
@@ -81,11 +88,18 @@ function PerimHome({ lunara, api, onNav }) {
           {cells.map((c, i) => {
             if (!c) return <div key={'b' + i}/>;
             const cd = cycleDayFrom(lunara && lunara.periodStart, c.date, L);
-            const faz = phaseOf(cd, L);
-            const bekleniyor = cd != null && bleedExpected(cd, L);
+            /* İleri tarihte bir sonraki döngüye taşan günler tahmin. Döngü
+               zaten uzamışsa ya da kanamayı ilaç arası belirliyorsa bu tahmin
+               güvenilmez — faz boyanmıyor, beklenen kanama aradan geliyor. */
+            const sonrakiDongu = c.isFuture && capa && daysBetween(lunara.periodStart, c.date) >= L;
+            const faz = sonrakiDongu && (uzadi || araVar) ? null : phaseOf(cd, L);
+            const ara = araVar && rejimAraGunu(lunara.regimen, c.date);
+            // Döngü uzadıysa cd > L: bleedExpected zaten false, sarılmış tahmin yok
+            const bekleniyor = araVar ? ara : (cd != null && bleedExpected(cd, L));
             const oldu = bledOn(lunara, c.key) > 0;
             const kayit = gunKaydi(lunara, c.key);
             const durum = faz ? [phaseLabel(faz)] : [];
+            if (ara) durum.push(t('medication break', 'ilaç arası'));
             if (bekleniyor) durum.push(t('bleeding expected', 'kanama bekleniyor'));
             if (oldu) durum.push(t('bleeding logged', 'kanama kaydedildi'));
             if (kayit.belirti) durum.push(t('symptoms', 'belirti'));
@@ -154,7 +168,9 @@ function PerimHome({ lunara, api, onNav }) {
                 {capa && (
                   <span style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 11, color: 'var(--muted)' }}>
                     <span style={{ width: 13, height: 13, borderRadius: 4, border: `1.5px dashed ${BEKLENEN_CIZGI}` }}/>
-                    {t('bleeding expected', 'beklenen kanama')}
+                    {araVar
+                      ? t('medication break — bleeding may come', 'ilaç arası — kanama bu günlerde gelebilir')
+                      : t('bleeding expected', 'beklenen kanama')}
                   </span>
                 )}
                 <span style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 11, color: 'var(--muted)' }}>

@@ -1,4 +1,4 @@
-import { medSlotFor, regimenDay } from './shared';
+import { activeMeds, medSlotFor, regimenDay } from './shared';
 
 /* kalan-gun.js — "Bu ilacı bu döngüde daha kaç gün kullanacağım?"
 
@@ -82,4 +82,21 @@ function kalanGunler(regimen, bugun) {
     .filter(x => x.ileri);
 }
 
-export { ilacIleri, kalanGunler, gunEkle, tarihAnahtari };
+/* İlaç arası: rejim döngüsünde hiçbir ilacın planlı olmadığı günler.
+   Döngüsel BHRT'de kanama çoğu zaman bu arada gelir (kullanıcı: "ara
+   verdiğimde bir iki gün sonra, bazen hiç gelmiyor"), bu yüzden takvim
+   beklenen kanamayı bir rejim varsa buradan gösteriyor. Rejimde hiç ara
+   yoksa (sürekli kullanım) ya da hiç ilaç yoksa ara da yok. */
+function rejimdeAraVar(regimen) {
+  if (!regimen || !Array.isArray(regimen.meds) || !regimen.meds.length) return false;
+  const L = regimen.cycleLength || 28;
+  let bos = 0;
+  for (let g = 1; g <= L; g++) if (activeMeds(regimen, g).length === 0) bos++;
+  return bos > 0 && bos < L;
+}
+function rejimAraGunu(regimen, tarih) {
+  if (!rejimdeAraVar(regimen)) return false;
+  return activeMeds(regimen, regimenDay(regimen, tarih)).length === 0;
+}
+
+export { ilacIleri, kalanGunler, gunEkle, tarihAnahtari, rejimdeAraVar, rejimAraGunu };

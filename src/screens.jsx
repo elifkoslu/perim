@@ -30,18 +30,38 @@ function cycleLenOf(lunara) {
 }
 function daysBetween(aIso, b) {
   const a = new Date(aIso + 'T00:00:00');
-  return Math.floor((b - a) / 86400000);
+  // Takvim günü farkı: saat taşıyan tarih gece yarısına indiriliyor, round
+  // yaz saatine geçilen 23 saatlik günde bir gün kaymayı önlüyor.
+  const g = new Date(b.getFullYear(), b.getMonth(), b.getDate());
+  return Math.round((g - a) / 86400000);
 }
 /* Döngü çapası yoksa döngü günü BİLİNMİYOR demektir — null döner.
    Eskiden çapa kurulumda sessizce bugüne düşüyordu; kullanıcı hiçbir şey
    girmemişken uygulama "döngünün 1. günündesin, menstrüel fazı" diyor,
    ayı fazlara boyuyor ve beş günü "beklenen kanama" işaretliyordu.
-   null döndürmek çağıranı bu hâli ele almaya zorluyor. */
+   null döndürmek çağıranı bu hâli ele almaya zorluyor.
+
+   Döngü uzunluğu dolup yeni kanama işaretlenmediğinde gün eskiden
+   kendiliğinden 1'e sarıyordu: kullanıcı hiç kanamamışken takvim, başlık ve
+   tohum döngüsü "menstrüel faz / ilk yarı" diyordu. Perimenopozda ve
+   döngüsel BHRT'de döngü sık sık uzar, kanama bazen hiç gelmez. Artık bugün
+   ve geçmiş için sarma yok: sayaç L+1, L+2… diye sürüyor (phaseOf → luteal,
+   yani yeni döngü başlamadıkça ikinci yarı). Yalnızca henüz gecikme yokken
+   ileriki günler tahmin olarak sarılıyor. Çapadan önceki günler (geçmiş
+   döngüler) eskisi gibi geriye izdüşüm. */
 function cycleDayFrom(periodStartIso, today = TODAY_DATE, cycleLength) {
   if (!periodStartIso) return null;
   const L = Math.max(15, Math.min(60, Number(cycleLength) || CYCLE_LEN));
   const d = daysBetween(periodStartIso, today);
-  return ((d % L) + L) % L + 1;
+  if (d < 0) return ((d % L) + L) % L + 1;
+  if (d < L) return d + 1;
+  const bugun = daysBetween(periodStartIso, TODAY_DATE);
+  if (d > bugun && bugun < L) return (d % L) + 1;   // ileri tarih, gecikme yok: tahmin
+  return d + 1;
+}
+// Döngü uzunluğu doldu, yeni regl işaretlenmedi
+function dongUzadi(day, cycleLength) {
+  return day != null && day > phaseBounds(cycleLength).L;
 }
 // Kullanıcı son reglinin ilk gününü işaretlemiş mi
 function hasCycleAnchor(lunara) { return !!(lunara && lunara.periodStart); }
@@ -60,6 +80,7 @@ function phaseOf(day, cycleLength) {
   if (day <= b.bleedEnd) return { key: 'menstrual', label: 'Menstrual', labelTr: 'Menstrüel' };
   if (day <= b.follEnd) return { key: 'follicular', label: 'Follicular', labelTr: 'Folliküler' };
   if (day <= b.ovEnd) return { key: 'ovulation', label: 'Ovulation', labelTr: 'Ovulasyon' };
+  // L'yi aşan gün (döngü uzadı) de burada: yeni regl gelene kadar ikinci yarı
   return { key: 'luteal', label: 'Luteal', labelTr: 'Luteal' };
 }
 function phaseLabel(ph) {
@@ -1650,4 +1671,4 @@ function careQuickPrompts(stage, phaseKey) {
   return sets[stage] || sets.cycle;
 }
 
-export { AdherenceMonth, TakenAmount, doseAmountOf, doseUnitOf, CYCLE_LEN, cycleLenOf, phaseBounds, daysBetween, cycleDayFrom, hasCycleAnchor, phaseOf, phaseLabel, phaseRange, seedRange, bledOn, bleedExpected, MOON_NAMES_TR, moonName, PHASE_TINT, moonPhase, moonMask, MoonDisc, ScreenHead, Btn, wrap, DosesScreen, RATE_LABELS, RATE_LABELS_TR, rateLabel, realSeries, SymptomsScreen, LabsScreen, labNote, CycleScreen, CycleRing, CareScreen, LibraryScreen, careQuickPrompts };
+export { AdherenceMonth, TakenAmount, doseAmountOf, doseUnitOf, CYCLE_LEN, cycleLenOf, phaseBounds, daysBetween, cycleDayFrom, dongUzadi, hasCycleAnchor, phaseOf, phaseLabel, phaseRange, seedRange, bledOn, bleedExpected, MOON_NAMES_TR, moonName, PHASE_TINT, moonPhase, moonMask, MoonDisc, ScreenHead, Btn, wrap, DosesScreen, RATE_LABELS, RATE_LABELS_TR, rateLabel, realSeries, SymptomsScreen, LabsScreen, labNote, CycleScreen, CycleRing, CareScreen, LibraryScreen, careQuickPrompts };

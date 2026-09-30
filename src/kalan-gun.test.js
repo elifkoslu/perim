@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import { ilacIleri, kalanGunler, tarihAnahtari } from './kalan-gun.js';
+import { ilacIleri, kalanGunler, rejimAraGunu, rejimdeAraVar, tarihAnahtari } from './kalan-gun.js';
 import { regimenDay } from './shared.jsx';
 
 /* "Bu ilacı bu döngüde daha kaç gün kullanacağım?" — yalnızca programdan
@@ -124,5 +124,35 @@ describe('son regl bilinmiyorken', () => {
   it('dozlar hormon kartı olmadan da gösteriliyor', () => {
     const kaynak = readFileSync(new URL('./perim-meds.jsx', import.meta.url), 'utf8');
     expect(kaynak).toMatch(/\{gun == null \? <Card>\{dozlar\}<\/Card>/);
+  });
+});
+
+describe('ilaç arası', () => {
+  // 28 günlük rejim, 1 Eylül 1. gün; ilaçlar 1–24, ara 25–28
+  const r = rejim([{ id: 'e', name: 'E', dose: '1', startDay: 1, endDay: 24 },
+                   { id: 'p', name: 'P', dose: '1', startDay: 13, endDay: 24 }]);
+  it('hiç ilaç planlanmayan günler ara', () => {
+    expect(rejimdeAraVar(r)).toBe(true);
+    expect(rejimAraGunu(r, gun('2026-09-24'))).toBe(false);
+    expect(rejimAraGunu(r, gun('2026-09-25'))).toBe(true);
+    expect(rejimAraGunu(r, gun('2026-09-28'))).toBe(true);
+    expect(rejimAraGunu(r, gun('2026-09-29'))).toBe(false);   // yeni rejim döngüsü
+  });
+  it('sürekli kullanımda ara yok', () => {
+    expect(rejimdeAraVar(rejim([estradiol]))).toBe(false);
+  });
+  it('ilaç yoksa ara yok', () => {
+    expect(rejimdeAraVar(rejim([]))).toBe(false);
+    expect(rejimdeAraVar(null)).toBe(false);
+  });
+});
+
+describe('ana takvim', () => {
+  const kaynak = readFileSync(new URL('./perim-home.jsx', import.meta.url), 'utf8');
+  it('rejimde ara varsa beklenen kanama aradan', () => {
+    expect(kaynak).toMatch(/const bekleniyor = araVar \? ara : \(cd != null && bleedExpected\(cd, L\)\);/);
+  });
+  it('döngü uzadıysa başlık menstrüel demiyor', () => {
+    expect(kaynak).toMatch(/YENİ REGL HENÜZ GELMEDİ/);
   });
 });
