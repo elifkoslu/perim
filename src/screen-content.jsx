@@ -36,6 +36,7 @@ const STAGE_SYMPTOMS = {
     ['hotflash', 'Hot flushes', 'Sıcak basması'], ['cycle', 'Bleeding', 'Kanama'],
     ['sleep', 'Sleep', 'Uyku'], ['mood', 'Mood', 'Ruh hali'],
     ['energy', 'Energy', 'Enerji'], ['libido', 'Libido', 'Libido'],
+    ['headache', 'Headache', 'Baş ağrısı'],
   ],
 };
 function symptomsFor(stage) {
