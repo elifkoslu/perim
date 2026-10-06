@@ -24,6 +24,7 @@ const YEDEK_SEMASI = {
   stage:       metinMi,
   periodStart: metinMi,
   periodDays:  nesneMi,
+  lekeGunleri: nesneMi,
   doses:       nesneMi,
   symptomLog:  nesneMi,
   notes:       diziMi,
@@ -109,6 +110,9 @@ function MyEntries({ lunara, api }) {
     { k: 'bleed',   n: say(lunara.periodDays), birim: { en: 'days', tr: 'gün' },
       en: 'Bleeding days', tr: 'Kanama günleri',
       sil: () => Object.keys(lunara.periodDays || {}).forEach(d => api.togglePeriodDay(d)) },
+    { k: 'leke',    n: say(lunara.lekeGunleri), birim: { en: 'days', tr: 'gün' },
+      en: 'Spotting days', tr: 'Lekelenme günleri',
+      sil: () => Object.keys(lunara.lekeGunleri || {}).forEach(d => api.kanamaIsaretle(d, null)) },
   ].filter(g => g.n > 0);
 
   return (

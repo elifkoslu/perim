@@ -142,6 +142,14 @@ function stageBlockFor(lunara, keys) {
       const cl = (lunara.regimen && lunara.regimen.cycleLength) || lunara.cycleLength;
       if (cl) rows.push({ l: { en: 'Cycle length used', tr: 'Kullanılan döngü uzunluğu' }, v: cl + ' ' + t('days', 'gün') });
     }
+    /* Ara kanama / lekelenme: BHRT altında ve perimenopozda hekimin ayrıca
+       bilmek istediği şey; regl günlerinden ayrı sayılıyor. */
+    const leke = Object.keys(lunara.lekeGunleri || {})
+      .filter(k => lunara.lekeGunleri[k])
+      .filter(k => { const g = daysApart(new Date(k + 'T00:00:00'), today); return g >= 0 && g < 90; })
+      .sort();
+    if (leke.length) rows.push({ l: { en: 'Spotting days (90 d)', tr: 'Ara kanama / lekelenme (son 90 g)' },
+      v: leke.length + ' ' + t('days', 'gün') + ' · ' + t('last', 'son') + ' ' + leke[leke.length - 1] });
     const bs = lunara.profile && lunara.profile.bhrtStatus;
     if (bs) rows.push({ l: { en: 'Hormone therapy', tr: 'Hormon tedavisi' }, v: bhrtLabel(bs) });
   }

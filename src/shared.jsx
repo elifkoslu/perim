@@ -417,7 +417,34 @@ function akisYaz(s, gun, deger) {
   const gunler = { ...(s.periodDays || {}), [gun]: deger };
   const log = { ...(s.symptomLog || {}) };
   if (log[gun]) log[gun] = kanamaAyikla(log[gun]);
-  return { ...s, periodDays: gunler, symptomLog: log, periodStart: sonKanamaBasi(gunler) || s.periodStart };
+  // Kanama puanı girilen gün lekelenme değil (ya da "Yok"): iki kayıt çakışmasın
+  const leke = { ...(s.lekeGunleri || {}) };
+  delete leke[gun];
+  return { ...s, periodDays: gunler, symptomLog: log, lekeGunleri: leke, periodStart: sonKanamaBasi(gunler) || s.periodStart };
+}
+
+/* ── Regl mi, lekelenme mi ────────────────────────────────────────
+   Takvimde bir güne dokunmak eskiden her zaman "regl günü" demekti: çapa
+   işaretli günlerin son serisinin ilk günü olduğu için perimenopozda / BHRT
+   altında sık görülen az bir ara kanama döngüyü o günden yeniden başlatıyor,
+   sonraki günler menstrüel faza boyanıyordu. Lekelenme artık ayrı tutuluyor
+   (lekeGunleri) ve döngüye hiç karışmıyor; bledOn, faz, çapa onu görmüyor.
+
+   tur: 'regl' | 'leke' | null (kaldır). Bir gün ya regl ya lekelenme.
+   Çapa her zaman kalan regl günlerinden yeniden hesaplanıyor — yanlışlıkla
+   regl işaretlenmiş bir lekelenme düzeltilince çapa önceki gerçek regle
+   döner. Hiç regl günü kalmazsa ve çapa tam bu günse çapa bilinmiyor olur
+   (eski bir tarihi uydurmaktansa). */
+function kanamaTuruYaz(s, gun, tur) {
+  const gunler = { ...(s.periodDays || {}) };
+  const leke = { ...(s.lekeGunleri || {}) };
+  delete leke[gun];
+  if (tur === 'regl') { if (!gunler[gun]) gunler[gun] = true; }
+  else delete gunler[gun];
+  if (tur === 'leke') leke[gun] = true;
+  const bas = sonKanamaBasi(gunler);
+  const periodStart = bas || (s.periodStart === gun ? null : s.periodStart);
+  return { ...s, periodDays: gunler, lekeGunleri: leke, periodStart };
 }
 
 /* Eski symptomLog kanama kayıtlarını açılışta bir kez periodDays'e taşı.
@@ -458,6 +485,8 @@ function useLunara() {
       // 'YYYY-MM-DD' -> true  (gerçekleşen kanama günleri; periodStart bunların
       // en son serisinin ilk gününden türetilir)
       periodDays: saved.periodDays || {},
+      // 'YYYY-MM-DD' -> true  (lekelenme / ara kanama — döngüyü başlatmaz)
+      lekeGunleri: saved.lekeGunleri || {},
       // journal notes [{ id, at, text }]
       notes: saved.notes || [],
       // 'YYYY-MM-DD' -> { stepIdx: true }  (workout step completion)
@@ -565,6 +594,7 @@ function useLunara() {
     // çapası, işaretli günlerin en son kesintisiz serisinin ilk günüdür: kullanıcı
     // geçmişi düzelttiğinde döngü günü kendiliğinden düzelsin diye türetiliyor.
     setFlow: (dateKey, deger) => setState(s => akisYaz(s, dateKey, deger)),
+    kanamaIsaretle: (dateKey, tur) => setState(s => kanamaTuruYaz(s, dateKey, tur)),
     togglePeriodDay: (dateKey) => setState(s => {
       const gunler = { ...(s.periodDays || {}) };
       if (gunler[dateKey]) delete gunler[dateKey]; else gunler[dateKey] = true;
@@ -1153,4 +1183,4 @@ function SymptomTrack({ series, color = 'var(--accent)', dotSize = 6, gap = 3 })
   );
 }
 
-export { sonKanamaBasi, KANAMA_ANAHTARLARI, kanamaDegeri, gunlukLog, akisYaz, akisTasi, PATIENT, DOSES_TODAY, SYMPTOMS, LABS, PROVIDER, PROGRAM, Icon, ICONS, navItemsFor, SideRail, Logo, LS_KEY, loadState, useLunara, nowHM, WHEN_TR, whenLabel, getTodayKey, TODAY_KEY, TODAY_DATE, regimenDay, activeMeds, medSchedule, medSlotFor, slotCovers, todaysDoses, medTaken, doseEntry, ProgramBar, TopBar, StorageBanner, DateNav, pillBtn, Card, SilBtn, Sparkline, RangeBar, SymptomTrack, labReadings, labHistory, labCurrent };
+export { sonKanamaBasi, kanamaTuruYaz, KANAMA_ANAHTARLARI, kanamaDegeri, gunlukLog, akisYaz, akisTasi, PATIENT, DOSES_TODAY, SYMPTOMS, LABS, PROVIDER, PROGRAM, Icon, ICONS, navItemsFor, SideRail, Logo, LS_KEY, loadState, useLunara, nowHM, WHEN_TR, whenLabel, getTodayKey, TODAY_KEY, TODAY_DATE, regimenDay, activeMeds, medSchedule, medSlotFor, slotCovers, todaysDoses, medTaken, doseEntry, ProgramBar, TopBar, StorageBanner, DateNav, pillBtn, Card, SilBtn, Sparkline, RangeBar, SymptomTrack, labReadings, labHistory, labCurrent };

@@ -742,12 +742,15 @@ function SymptomsScreen({ lunara, api, logDate, setLogDate }) {
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
             {syms.map(s => {
               const val = dayLog[s.key] ?? null;
+              // Kanama satırında lekelenme ayrı: döngüyü yeniden başlatmaz
+              const kanamaSatiri = KANAMA_ANAHTARLARI.includes(s.key);
+              const lekeOn = kanamaSatiri && !!(lunara.lekeGunleri || {})[dk];
               return (
                 <div key={s.key}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 7 }}>
                     <span style={{ fontSize: 13.5, fontWeight: 500 }}>{t(s.label, s.labelTr)}</span>
-                    <span style={{ fontSize: 11.5, color: val == null ? 'var(--muted-2)' : 'var(--accent)', fontFamily: 'var(--mono)' }}>
-                      {val == null ? '—' : rateLabel(val)}
+                    <span style={{ fontSize: 11.5, color: val == null && !lekeOn ? 'var(--muted-2)' : 'var(--accent)', fontFamily: 'var(--mono)' }}>
+                      {val == null ? (lekeOn ? t('spotting', 'lekelenme') : '—') : rateLabel(val)}
                     </span>
                   </div>
                   <div style={{ display: 'flex', gap: 6 }}>
@@ -766,6 +769,16 @@ function SymptomsScreen({ lunara, api, logDate, setLogDate }) {
                       );
                     })}
                   </div>
+                  {kanamaSatiri && (
+                    <button onClick={() => api.kanamaIsaretle(dk, lekeOn ? null : 'leke')} aria-pressed={lekeOn}
+                      style={{
+                        marginTop: 7, padding: '6px 11px', borderRadius: 999, fontSize: 11.5, cursor: 'pointer',
+                        background: lekeOn ? 'var(--accent)' : 'transparent', color: lekeOn ? 'var(--ivory)' : 'var(--ink-2)',
+                        boxShadow: lekeOn ? 'none' : 'inset 0 0 0 1px var(--line)', fontWeight: lekeOn ? 600 : 500,
+                      }}>
+                      {lekeOn ? '✓ ' : ''}{t('Just spotting — doesn’t restart the cycle', 'Yalnızca lekelenme — döngüyü yeniden başlatmaz')}
+                    </button>
+                  )}
                 </div>
               );
             })}

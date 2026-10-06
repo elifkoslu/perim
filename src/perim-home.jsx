@@ -26,6 +26,7 @@ import { Card, ICONS, Icon, TODAY_DATE, TODAY_KEY, getTodayKey, medTaken, todays
 const BEKLENEN_CIZGI = '#b04a72';
 const KANAMA_ZEMIN   = '#f2b6cd';
 const FAZ_ALFA       = '2b';
+const LEKE_RENK      = '#c0392b';
 
 // Bir günde ne kaydedilmiş
 function gunKaydi(lunara, key) {
@@ -45,6 +46,8 @@ function PerimHome({ lunara, api, onNav }) {
   const { go, isCurrentMonth, monthLabel, weekdays, cells } = useMonthView();
   useLang();
   const [aciklama, setAciklama] = React.useState(false);
+  // Dokunulan gün: regl mi lekelenme mi, takvimin altındaki panelden seçiliyor
+  const [secili, setSecili] = React.useState(null);
   const L = cycleLenOf(lunara);
   const gun = cycleDayFrom(lunara && lunara.periodStart, TODAY_DATE, L);
   const ph = phaseOf(gun, L);
@@ -75,7 +78,7 @@ function PerimHome({ lunara, api, onNav }) {
             </div>
             <div style={{ fontSize: 11.5, color: 'var(--muted)', marginTop: 3 }}>
               {capa
-                ? t('Tap a day to log bleeding', 'Kanamayı işaretlemek için güne dokun')
+                ? t('Tap a day to log a period or spotting', 'Regl ya da lekelenme işaretlemek için güne dokun')
                 : t('Tap the first day of your last period — phases appear once it is set',
                     'Son reglinin ilk gününe dokun — fazlar ancak o zaman görünür')}
             </div>
@@ -97,19 +100,21 @@ function PerimHome({ lunara, api, onNav }) {
             // Döngü uzadıysa cd > L: bleedExpected zaten false, sarılmış tahmin yok
             const bekleniyor = araVar ? ara : (cd != null && bleedExpected(cd, L));
             const oldu = bledOn(lunara, c.key) > 0;
+            const leke = !!(lunara.lekeGunleri || {})[c.key];
             const kayit = gunKaydi(lunara, c.key);
             const durum = faz ? [phaseLabel(faz)] : [];
             if (ara) durum.push(t('estrogen break', 'östrojen arası'));
             if (bekleniyor) durum.push(t('bleeding expected', 'kanama bekleniyor'));
             if (oldu) durum.push(t('bleeding logged', 'kanama kaydedildi'));
+            if (leke) durum.push(t('spotting', 'lekelenme'));
             if (kayit.belirti) durum.push(t('symptoms', 'belirti'));
             if (kayit.doz) durum.push(t('doses', 'doz'));
             if (kayit.hareket) durum.push(t('movement', 'hareket'));
             const dokunabilir = !!api && !c.isFuture;
             return (
               <button key={c.key} disabled={!dokunabilir}
-                onClick={dokunabilir ? () => api.togglePeriodDay(c.key) : undefined}
-                aria-pressed={dokunabilir ? oldu : undefined}
+                onClick={dokunabilir ? () => setSecili(k => (k === c.key ? null : c.key)) : undefined}
+                aria-expanded={dokunabilir ? secili === c.key : undefined}
                 aria-label={[c.d, cd != null && `${t('day', 'gün')} ${cd}`].filter(Boolean).concat(durum).join(' · ')}
                 title={[c.d, cd != null && `${t('day', 'gün')} ${cd}`].filter(Boolean).concat(durum).join(' · ')}
                 style={{
@@ -117,7 +122,8 @@ function PerimHome({ lunara, api, onNav }) {
                   alignItems: 'center', justifyContent: 'flex-start', gap: 3,
                   padding: '7px 2px 8px', borderRadius: 10, minHeight: 48, width: '100%',
                   background: oldu ? KANAMA_ZEMIN : (faz ? PHASE_TINT[faz.key] + FAZ_ALFA : 'var(--ivory)'),
-                  boxShadow: c.isToday ? '0 0 0 2px var(--ink)' : 'inset 0 0 0 1px var(--line-soft)',
+                  boxShadow: secili === c.key ? '0 0 0 2px var(--accent)'
+                    : c.isToday ? '0 0 0 2px var(--ink)' : 'inset 0 0 0 1px var(--line-soft)',
                   outline: bekleniyor ? `1.5px dashed ${BEKLENEN_CIZGI}` : 'none',
                   outlineOffset: -3,
                   opacity: c.isFuture ? 0.55 : 1,
@@ -125,6 +131,9 @@ function PerimHome({ lunara, api, onNav }) {
                 }}>
                 <span style={{ fontFamily: 'var(--serif)', fontSize: 15, lineHeight: 1,
                   fontWeight: c.isToday ? 700 : 400, color: 'var(--ink)' }}>{c.d}</span>
+                {/* lekelenme: döngüyü boyamıyor, köşede bir damla */}
+                {leke && <i aria-hidden="true" style={{ position: 'absolute', top: 5, right: 6, width: 7, height: 7,
+                  borderRadius: '50% 0 50% 50%', transform: 'rotate(-45deg)', background: LEKE_RENK }}/>}
                 {/* takip noktaları — o gün ne kaydedilmiş */}
                 <span style={{ display: 'flex', gap: 2.5, marginTop: 'auto', height: 5 }}>
                   {kayit.belirti && <i style={{ width: 5, height: 5, borderRadius: '50%', background: 'var(--accent)' }}/>}
@@ -141,6 +150,12 @@ function PerimHome({ lunara, api, onNav }) {
           })}
         </div>
 
+        {secili && (
+          <KanamaSecimi gun={secili} lunara={lunara}
+            onSec={(tur) => { api.kanamaIsaretle(secili, tur); setSecili(null); }}
+            onKapat={() => setSecili(null)}/>
+        )}
+
         {/* Açıklama katlanır: dokuz kalem, üç satır ve takvimden sonra koca
             bir blok oluyordu. Renk tek başına kimlik taşımadığı için hâlâ
             erişilebilir olmalı — sadece varsayılan olarak kapalı. */}
@@ -155,7 +170,7 @@ function PerimHome({ lunara, api, onNav }) {
           </button>
 
           {aciklama && (
-            <div className="fade-up" style={{ marginTop: 10 }}>
+            <div style={{ marginTop: 10 }}>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '7px 14px' }}>
                 {capa && ['menstrual', 'follicular', 'ovulation', 'luteal'].map(k => (
                   <span key={k} style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 11, color: 'var(--muted)' }}>
@@ -175,7 +190,11 @@ function PerimHome({ lunara, api, onNav }) {
                 )}
                 <span style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 11, color: 'var(--muted)' }}>
                   <span style={{ width: 13, height: 13, borderRadius: 4, background: KANAMA_ZEMIN }}/>
-                  {t('bleeding logged', 'gerçekleşen kanama')}
+                  {t('period', 'regl')}
+                </span>
+                <span style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 11, color: 'var(--muted)' }}>
+                  <span style={{ width: 7, height: 7, borderRadius: '50% 0 50% 50%', transform: 'rotate(-45deg)', background: LEKE_RENK }}/>
+                  {t('spotting', 'lekelenme')}
                 </span>
                 {[['var(--accent)', t('symptoms', 'belirti')],
                   [PHASE_TINT.luteal, t('doses', 'doz')],
@@ -258,6 +277,47 @@ function DurumRozeti({ tamam, etiket, ikon, onClick }) {
       {/* Bitmemiş olan bir çağrı, bitmiş olan bir durum — aynı görünmemeliler */}
       {!tamam && <Icon d={ICONS.arrow} size={13} stroke="var(--muted-2)"/>}
     </button>
+  );
+}
+
+/* Bir güne dokununca: regl mi, lekelenme mi. Panel ızgaranın hemen altında
+   (yüzen bir pencere değil): telefonda görünür kalıyor ve hangi günün
+   seçildiği hücre çerçevesinden anlaşılıyor. "fade-up" sınıfı bilerek yok:
+   mobil stil .fade-up > div'e sayfa dolgusu veriyor (styles.css). */
+function KanamaSecimi({ gun, lunara, onSec, onKapat }) {
+  const lang = useLang();
+  const regl = !!(lunara.periodDays || {})[gun];
+  const leke = !!(lunara.lekeGunleri || {})[gun];
+  const etiket = new Date(gun + 'T00:00:00').toLocaleDateString(lang === 'tr' ? 'tr' : 'en', { weekday: 'long', day: 'numeric', month: 'long' });
+  const secenek = (on, baslik, aciklama, tur, renk) => (
+    <button onClick={() => onSec(on ? null : tur)} aria-pressed={on}
+      style={{
+        flex: '1 1 150px', textAlign: 'left', padding: '11px 13px', borderRadius: 12, cursor: 'pointer',
+        background: on ? renk : 'var(--bone)', border: 'none',
+        boxShadow: on ? 'inset 0 0 0 2px var(--ink)' : 'inset 0 0 0 1px var(--line-soft)',
+        fontFamily: 'var(--sans)',
+      }}>
+      <div style={{ fontSize: 13.5, fontWeight: 600, color: 'var(--ink)' }}>{on ? '✓ ' : ''}{baslik}</div>
+      <div style={{ fontSize: 11.5, color: 'var(--ink-2)', marginTop: 3, lineHeight: 1.4 }}>
+        {on ? t('Tap again to remove', 'Kaldırmak için tekrar dokun') : aciklama}
+      </div>
+    </button>
+  );
+  return (
+    <div style={{ marginTop: 12, padding: 14, borderRadius: 14, background: 'var(--card)', boxShadow: 'inset 0 0 0 1px var(--line)' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 10, marginBottom: 10 }}>
+        <span style={{ fontSize: 13.5, fontWeight: 600 }}>{etiket}</span>
+        <button onClick={onKapat} style={{ fontSize: 12, color: 'var(--muted)', background: 'transparent', border: 'none', cursor: 'pointer' }}>
+          {t('Cancel', 'Vazgeç')}
+        </button>
+      </div>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+        {secenek(regl, t('Period', 'Regl'),
+          t('Your cycle counts from the first day of this bleed', 'Döngün bu kanamanın ilk gününden sayılır'), 'regl', KANAMA_ZEMIN)}
+        {secenek(leke, t('Spotting', 'Lekelenme / ara kanama'),
+          t('Logged, but doesn’t restart the cycle', 'Kaydedilir ama döngüyü yeniden başlatmaz'), 'leke', '#f6d5d0')}
+      </div>
+    </div>
   );
 }
 
