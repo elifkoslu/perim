@@ -13,7 +13,12 @@ export default defineConfig({
     VitePWA({
       registerType: 'autoUpdate',
       // Bildirime dokununca uygulamayı açan dinleyici (public/sw-bildirim.js)
-      workbox: { importScripts: ['sw-bildirim.js'] },
+      workbox: {
+        importScripts: ['sw-bildirim.js'],
+        // Varsayılan desen .mjs'yi almıyor; pdf.js worker'ı (pdf.worker.min-*.mjs)
+        // ön-belleğe girmeyince site erişilemezken PDF içe aktarma çöküyordu.
+        globPatterns: ['**/*.{js,mjs,css,html}'],
+      },
       includeAssets: [
         'apple-touch-icon.png', 'icon-192.png', 'icon-512.png', 'og.png',
         // Self-host edilmiş fontlar da ön-belleğe girmeli; yoksa çevrimdışı
