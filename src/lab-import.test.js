@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { parseEnabizLines } from './lab-import.jsx';
+import { okuyucuYuklenemedi, parseEnabizLines } from './lab-import.jsx';
 
 /* e-Nabız ayrıştırıcısı, devlet sağlık raporunu hekimin göreceği sayılara
    çeviriyor. Buradaki bir hata gürültülü değil sessizdir: yanlış sütun,
@@ -89,5 +89,21 @@ describe('e-Nabız ayrıştırıcı', () => {
   it('değeri olmayan satırdan tahlil üretmez', () => {
     const g = oku([['24.08.2026'], ['Estradiol'], ['Açıklama', 'yok']]);
     expect(g).toEqual([]);
+  });
+});
+
+describe('okuyucu yüklenemedi', () => {
+  /* Site erişilemezken (VPN kapalı, ağ engeli) pdf.js worker'ı gelmiyor;
+     kullanıcıya "bu e-Nabız PDF'i mi?" denmemeli. */
+  it('worker ve modül yükleme hataları ayrı tanınıyor', () => {
+    expect(okuyucuYuklenemedi(new Error('Setting up fake worker failed: "Failed to fetch dynamically imported module: https://x/pdf.worker.min.mjs".'))).toBe(true);
+    expect(okuyucuYuklenemedi(new TypeError('Importing a module script failed.'))).toBe(true);
+    expect(okuyucuYuklenemedi(new TypeError('Load failed'))).toBe(true);
+  });
+  it('bozuk ya da farklı PDF bu sınıfa girmiyor', () => {
+    const e = new Error('Invalid PDF structure.'); e.name = 'InvalidPDFException';
+    expect(okuyucuYuklenemedi(e)).toBe(false);
+    const p = new Error('No password given'); p.name = 'PasswordException';
+    expect(okuyucuYuklenemedi(p)).toBe(false);
   });
 });

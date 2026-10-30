@@ -150,6 +150,15 @@ function parseEnabizLines(lines) {
     .filter(g => g.readings.length > 0);
 }
 
+/* PDF okuyucunun kendisi (pdf.js modülü ya da worker'ı) yüklenemediyse dosyada
+   sorun yok: site o an erişilemiyor (çevrimdışı, VPN kapalı, ağ engeli) ve
+   okuyucu henüz ön-bellekte değil. "Bu bir e-Nabız PDF'i mi?" demek yanlış
+   yöne yollar. */
+const OKUYUCU_HATASI = /worker|dynamically imported module|module script|failed to fetch|load failed|networkerror/i;
+function okuyucuYuklenemedi(err) {
+  return OKUYUCU_HATASI.test(`${(err && err.name) || ''} ${(err && err.message) || String(err)}`);
+}
+
 async function parseEnabizPdf(file) {
   const lines = await extractLines(file);
   return parseEnabizLines(lines);
@@ -181,6 +190,9 @@ function ImportLabModal({ onClose, api }) {
         + ` · ${file.type || '?'} · ${Math.round(file.size / 1024)} KB · ${SURUM}`);
       setError(err && err.message === 'pdf-cok-buyuk'
         ? t('This file is too large (limit 20 MB).', 'Bu dosya çok büyük (sınır 20 MB).')
+        : okuyucuYuklenemedi(err)
+        ? t('The PDF reader could not load — the file is probably fine. Open the app once while the site is reachable (internet on, VPN if you need it), then try again.',
+            'PDF okuyucu yüklenemedi — dosyada büyük olasılıkla sorun yok. Site erişilebilirken (internet açık, gerekiyorsa VPN açık) uygulamayı bir kez açıp yeniden dene.')
         : t('The file could not be processed. Is it an e-Nabız lab PDF?', 'Dosya işlenemedi. Bu bir e-Nabız tahlil PDF’i mi?'));
       setPhase('error');
     }
@@ -305,4 +317,4 @@ function ImportLabModal({ onClose, api }) {
   );
 }
 
-export { parseEnabizPdf, parseEnabizLines, ImportLabModal };
+export { parseEnabizPdf, parseEnabizLines, okuyucuYuklenemedi, ImportLabModal };
