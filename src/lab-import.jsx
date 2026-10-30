@@ -29,6 +29,9 @@ async function loadPdfjs() {
    disableFontFace: gömülü fontlar tarayıcıya kaydedilmez, yalnızca çizilir.
    Yalnızca metin okuduğumuz için hiçbiri sonucu etkilemiyor.
    Sayfa ve boyut sınırı, çok büyük bir dosyanın sekmeyi kilitlemesini önler. */
+// Derleme damgası (vite.config define); hangi sürümün çalıştığını hata ekranında gösterir.
+const SURUM = typeof __PERIM_SURUM__ !== 'undefined' ? __PERIM_SURUM__ : 'dev';
+
 const MAKS_SAYFA = 40;
 const MAKS_BAYT = 20 * 1024 * 1024;
 
@@ -158,6 +161,8 @@ function ImportLabModal({ onClose, api }) {
   const [groups, setGroups] = React.useState([]);
   const [checked, setChecked] = React.useState({}); // 'date|key' -> bool
   const [error, setError] = React.useState('');
+  // Teknik ayrıntı: telefonda konsol yok; kullanıcı ekran görüntüsüyle iletebilsin.
+  const [errDetail, setErrDetail] = React.useState('');
 
   const pick = async (e) => {
     const file = e.target.files && e.target.files[0];
@@ -172,6 +177,8 @@ function ImportLabModal({ onClose, api }) {
     } catch (err) {
       // Gerçek nedeni konsola bırak; kullanıcı mesajı her hatada aynı.
       console.error('e-Nabız PDF içe aktarma hatası:', err);
+      setErrDetail(`${(err && err.name) || 'Error'}: ${(err && err.message) || String(err)}`
+        + ` · ${file.type || '?'} · ${Math.round(file.size / 1024)} KB · ${SURUM}`);
       setError(err && err.message === 'pdf-cok-buyuk'
         ? t('This file is too large (limit 20 MB).', 'Bu dosya çok büyük (sınır 20 MB).')
         : t('The file could not be processed. Is it an e-Nabız lab PDF?', 'Dosya işlenemedi. Bu bir e-Nabız tahlil PDF’i mi?'));
@@ -237,6 +244,9 @@ function ImportLabModal({ onClose, api }) {
         {phase === 'error' && (
           <>
             <p style={{ fontSize: 13.5, color: 'var(--signal-low)', lineHeight: 1.55, margin: '0 0 16px' }}>{error}</p>
+            {errDetail && (
+              <p style={{ fontFamily: 'var(--mono)', fontSize: 10.5, color: 'var(--muted)', lineHeight: 1.45, margin: '-8px 0 16px', wordBreak: 'break-word' }}>{errDetail}</p>
+            )}
             <button onClick={() => setPhase('pick')} style={{
               width: '100%', padding: '12px 0', borderRadius: 999, border: '1px solid var(--line)',
               background: 'transparent', color: 'var(--ink-2)', fontFamily: 'var(--sans)', fontSize: 14, fontWeight: 600, cursor: 'pointer',
