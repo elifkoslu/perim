@@ -8,10 +8,14 @@ import { Card, ICONS, Icon, LABS, getTodayKey } from './shared';
 
 // pdfjs ~1 MB — yalnızca gerçekten PDF içe aktarılırken dinamik yüklenir,
 // ana paket küçük kalır.
+/* "legacy" yapı: pdf.js 4.x modern yapısı Promise.withResolvers gibi yeni
+   API'lere doğrudan dayanıyor; iOS/Safari 17.4 öncesinde bu yüzden getDocument
+   patlıyor ve kullanıcı geçerli e-Nabız PDF'inde "işlenemedi" görüyordu.
+   Legacy yapı bu polyfill'leri hem ana iş parçacığında hem worker'da taşır. */
 async function loadPdfjs() {
   const [pdfjs, worker] = await Promise.all([
-    import('pdfjs-dist'),
-    import('pdfjs-dist/build/pdf.worker.min.mjs?url'),
+    import('pdfjs-dist/legacy/build/pdf.mjs'),
+    import('pdfjs-dist/legacy/build/pdf.worker.min.mjs?url'),
   ]);
   pdfjs.GlobalWorkerOptions.workerSrc = worker.default;
   return pdfjs;
@@ -166,6 +170,8 @@ function ImportLabModal({ onClose, api }) {
       gs.forEach(g => g.readings.forEach(r => { ck[g.date + '|' + r.key] = true; }));
       setGroups(gs); setChecked(ck); setPhase('review');
     } catch (err) {
+      // Gerçek nedeni konsola bırak; kullanıcı mesajı her hatada aynı.
+      console.error('e-Nabız PDF içe aktarma hatası:', err);
       setError(err && err.message === 'pdf-cok-buyuk'
         ? t('This file is too large (limit 20 MB).', 'Bu dosya çok büyük (sınır 20 MB).')
         : t('The file could not be processed. Is it an e-Nabız lab PDF?', 'Dosya işlenemedi. Bu bir e-Nabız tahlil PDF’i mi?'));
