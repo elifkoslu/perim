@@ -60,7 +60,7 @@ General period apps start a "new cycle" every 28 days on their own. For someone 
 | Offline and install | `vite-plugin-pwa` (Workbox service worker, web app manifest) |
 | PDF parsing | `pdfjs-dist` (runs in the browser) |
 | Data storage | Browser `localStorage`. There is no database and no backend. |
-| Tests / lint | Vitest (265 tests in 27 files), oxlint |
+| Tests / lint | Vitest (268 tests in 28 files), oxlint |
 | Hosting | Vercel (static hosting). Every push to GitHub deploys automatically. |
 | Security headers | Strict Content-Security-Policy (no outside network connections allowed), HSTS, X-Frame-Options and others, set in `vercel.json` |
 | Fonts | Manrope, Spectral and JetBrains Mono, all served by the app itself (no Google Fonts requests) |
