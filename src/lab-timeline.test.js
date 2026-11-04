@@ -102,3 +102,14 @@ describe('eksen — geniş aralık değişimi ezmesin', () => {
     expect(e.hi).toBeGreaterThan(400);
   });
 });
+
+/* REGRESYON: durum rozeti her dilde 'tr' ile büyütülüyordu; İngilizce
+   ekranda "in range" → "İN RANGE" (noktalı İ) çıkıyordu. */
+import fs_ from 'node:fs';
+import path_ from 'node:path';
+describe('durum rozeti büyük harfi', () => {
+  it('dile göre büyütülüyor, sabit tr değil', () => {
+    const k = fs_.readFileSync(path_.join(import.meta.dirname, 'lab-timeline.jsx'), 'utf8');
+    expect(k).not.toMatch(/durumEtiketi\([^)]*\)\.toLocaleUpperCase\('tr'\)/);
+  });
+});

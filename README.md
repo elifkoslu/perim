@@ -4,7 +4,7 @@ A private, phone-first tracker for women in perimenopause who use cyclic bioiden
 
 **Live:** https://perim-app.vercel.app (Turkish / English). The app installs to the phone's home screen from the browser.
 
-<!-- Screenshot: home calendar (phone width) → docs/screenshots/calendar.png -->
+<img src="docs/screenshots/calendar.png" alt="Perim cycle calendar" width="300">
 
 ---
 
@@ -60,7 +60,7 @@ General period apps start a "new cycle" every 28 days on their own. For someone 
 | Offline and install | `vite-plugin-pwa` (Workbox service worker, web app manifest) |
 | PDF parsing | `pdfjs-dist` (runs in the browser) |
 | Data storage | Browser `localStorage`. There is no database and no backend. |
-| Tests / lint | Vitest (268 tests in 28 files), oxlint |
+| Tests / lint | Vitest (269 tests in 28 files), oxlint |
 | Hosting | Vercel (static hosting). Every push to GitHub deploys automatically. |
 | Security headers | Strict Content-Security-Policy (no outside network connections allowed), HSTS, X-Frame-Options and others, set in `vercel.json` |
 | Fonts | Manrope, Spectral and JetBrains Mono, all served by the app itself (no Google Fonts requests) |
@@ -94,7 +94,7 @@ Perim is a single-page web app with no server. Everything runs and is stored on 
 
 - **Live** since 27 August 2026 at https://perim-app.vercel.app.
 - **Users:** a small, informal group; earlier versions were shown to a few people for usability feedback. The app collects no analytics, so there are no user counts.
-- **Size:** about 10,900 lines of application code and 2,200 lines of tests, in 65 source files. 40 commits.
+- **Size:** about 10,900 lines of application code and 2,200 lines of tests, in 65 source files. About 40 commits.
 - **Hosting:** Vercel's free Hobby plan, which is for non-commercial use.
 - **Origin:** Perim is a focused, single-stage spin-off of Womentum, which itself came from Lunara, the author's broader women's health tracker. The cycle maths, physiology data and tests come from there.
 
@@ -112,10 +112,11 @@ Every commit in this repository is marked as co-authored by Claude. The first ve
 
 ## Screenshots
 
-<!-- Replace with real screenshots taken with demo data (see "Development" below). -->
-| Calendar | Medications | Symptoms | Analysis |
+Taken with fictional demo data ("Deniz"); no real person's data is shown.
+
+| Medications | Symptoms | Lab results | Doctor summary |
 |---|---|---|---|
-| ![Calendar](docs/screenshots/calendar.png) | ![Medications](docs/screenshots/medications.png) | ![Symptoms](docs/screenshots/symptoms.png) | ![Analysis](docs/screenshots/analysis.png) |
+| ![Medications](docs/screenshots/medications.png) | ![Symptoms](docs/screenshots/symptoms.png) | ![Lab results](docs/screenshots/labs.png) | ![Doctor summary](docs/screenshots/summary.png) |
 
 ## Roadmap (not built yet)
 
@@ -137,3 +138,5 @@ The app ships with no sample data. To take screenshots, open it in a fresh brows
 ---
 
 *Perim is a personal tracking tool, not a medical device. It does not diagnose and does not recommend doses.*
+
+© 2026 Elif Köslü. The code is shared for portfolio review; all rights reserved.

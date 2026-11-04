@@ -1,5 +1,5 @@
 import React from 'react';
-import { t } from './i18n';
+import { t, I18N } from './i18n';
 
 /* lab-timeline.jsx — bir analitin tüm ölçümlerini zaman içinde gösterir.
 
@@ -162,7 +162,7 @@ function LabTimelineRows({ seri, unit, fmtDate }) {
               background: d.durum === 'aralikta' ? 'var(--accent-soft)'
                 : d.durum === 'bilinmiyor' ? 'var(--line-soft)' : 'var(--signal-warn)',
               color: d.durum === 'aralikta' || d.durum === 'bilinmiyor' ? 'var(--ink-2)' : 'var(--ivory)',
-            }}>{durumEtiketi(d.durum).toLocaleUpperCase('tr')}</span>
+            }}>{durumEtiketi(d.durum).toLocaleUpperCase(I18N.lang === 'tr' ? 'tr' : 'en')}</span>
           </span>
         </div>
       ))}
